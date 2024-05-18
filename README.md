@@ -1,1 +1,3 @@
-# godot-ci-cd
+# Sentry Jump
+
+A sample Godot game.

@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3 uid="uid://c0je61l5v1cit"]
+
+[ext_resource type="Texture2D" uid="uid://dkgt6h7s3v18v" path="res://assets/confetti_sheet.png" id="1_1eteg"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_l2cix"]
+particles_animation = true
+particles_anim_h_frames = 17
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_r07x5"]
+min_value = -360.0
+max_value = 360.0
+_data = [Vector2(0, 5.95245), 0.0, 1267.0, 0, 0, Vector2(0.760431, 360), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="Confetti" type="CPUParticles2D"]
+material = SubResource("CanvasItemMaterial_l2cix")
+position = Vector2(1.90735e-06, -152)
+scale = Vector2(0.7, 0.7)
+emitting = false
+amount = 60
+lifetime = 6.0
+one_shot = true
+explosiveness = 1.0
+randomness = 0.38
+lifetime_randomness = 0.19
+texture = ExtResource("1_1eteg")
+direction = Vector2(2.08165e-12, -120)
+spread = 44.15
+gravity = Vector2(2.08165e-12, 600)
+initial_velocity_min = 100.0
+initial_velocity_max = 800.0
+angular_velocity_min = -1.0
+angular_velocity_max = 1.0
+angular_velocity_curve = SubResource("Curve_r07x5")
+linear_accel_min = 1.0
+linear_accel_max = 20.0
+radial_accel_max = 4.0
+damping_min = 55.0
+damping_max = 75.0
+angle_min = -25.4
+angle_max = 41.1
+scale_amount_min = 0.04
+scale_amount_max = 0.16
+anim_offset_max = 1.0

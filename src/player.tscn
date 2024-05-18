@@ -1,0 +1,68 @@
+[gd_scene load_steps=9 format=3 uid="uid://uqwd8fku0yb"]
+
+[ext_resource type="Script" path="res://src/player.gd" id="1_2okes"]
+[ext_resource type="Texture2D" uid="uid://dawpbegdvmqco" path="res://assets/player_sheet.png" id="2_q0mys"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e681e"]
+size = Vector2(80, 126)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y1ovj"]
+atlas = ExtResource("2_q0mys")
+region = Rect2(1141, 0, 1141, 1200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4bkrm"]
+atlas = ExtResource("2_q0mys")
+region = Rect2(2282, 0, 1141, 1200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oxffv"]
+atlas = ExtResource("2_q0mys")
+region = Rect2(0, 0, 1141, 1200)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dw7wf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y1ovj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4bkrm")
+}],
+"loop": true,
+"name": &"cheer",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oxffv")
+}],
+"loop": true,
+"name": &"run",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yfsbm"]
+size = Vector2(80, 126)
+
+[node name="Player" type="CharacterBody2D"]
+collision_mask = 3
+script = ExtResource("1_2okes")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, -17)
+shape = SubResource("RectangleShape2D_e681e")
+
+[node name="AnimatedSprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -37)
+scale = Vector2(0.16, 0.16)
+sprite_frames = SubResource("SpriteFrames_dw7wf")
+animation = &"run"
+
+[node name="GoalDetectorArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GoalDetectorArea"]
+visible = false
+position = Vector2(2.08165e-12, -17)
+shape = SubResource("RectangleShape2D_yfsbm")
+
+[connection signal="area_entered" from="GoalDetectorArea" to="." method="_on_goal_detector_area_area_entered"]

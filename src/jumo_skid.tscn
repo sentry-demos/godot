@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dr64kflbfp6gc"]
+
+[ext_resource type="Texture2D" uid="uid://dpbk6e2qxngk8" path="res://assets/skid.png" id="1_o8buf"]
+
+[node name="JumoSkid" type="Sprite2D"]
+scale = Vector2(0.16, 0.16)
+texture = ExtResource("1_o8buf")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.4
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="queue_free"]
