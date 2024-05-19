@@ -9,7 +9,7 @@ const GRAVITY = 900
 
 @onready var sprite = $AnimatedSprite
 
-func _physics_process(delta):
+func _physics_process(delta):	
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -30,14 +30,13 @@ func _physics_process(delta):
 			velocity.x = move_toward(velocity.x, 0, SPEED)
 		
 	move_and_slide()
-
+	
 func jump():
 	velocity.y = JUMP_VELOCITY
 	# Show jump skid.
 	var skid = Game.instance_scene_on_main(JumpSkid, global_position)
 	skid.flip_h = sprite.flip_h
-
-
+	
 func _on_goal_detector_area_area_entered(goal: Area2D):
 	await Game.wait(0.16)
 	can_move = false
