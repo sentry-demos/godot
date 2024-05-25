@@ -16,7 +16,7 @@ func _process(_delta: float) -> void:
 func _physics_process(delta):
 	# Reset the game if the player fell down
 	if player and player.position.y > 800:
-		await wait(0.5)
+		await wait(0.16)
 		reset_scene()
 		
 func instance_scene_on_main(scene: PackedScene, position: Vector2):

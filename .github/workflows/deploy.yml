@@ -23,6 +23,7 @@ jobs:
           archive_output: true
           use_preset_export_path: true
           export_debug: false
+          cache: true
 
       - name: Upload web build to itch
         uses: KikimoraGames/itch-publish@v0.0.3
