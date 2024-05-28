@@ -1,11 +1,16 @@
-[gd_scene load_steps=4 format=3 uid="uid://weeiht8hunpe"]
+[gd_scene load_steps=5 format=3 uid="uid://weeiht8hunpe"]
 
 [ext_resource type="Script" path="res://src/game.gd" id="1_6it2k"]
 [ext_resource type="PackedScene" uid="uid://bvlke5sdpc0bg" path="res://src/platform.tscn" id="1_43gg5"]
+[ext_resource type="PackedScene" uid="uid://b8tfilcskjrcm" path="res://src/goal.tscn" id="2_18vqm"]
 [ext_resource type="PackedScene" uid="uid://uqwd8fku0yb" path="res://src/player.tscn" id="2_i4rd4"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_6it2k")
+
+[node name="Goal" parent="." instance=ExtResource("2_18vqm")]
+position = Vector2(832, 344)
+metadata/_edit_group_ = true
 
 [node name="Platforms" type="Node2D" parent="."]
 position = Vector2(-24, -8)
