@@ -9,7 +9,7 @@
 script = ExtResource("1_6it2k")
 
 [node name="Goal" parent="." instance=ExtResource("2_18vqm")]
-position = Vector2(832, 344)
+position = Vector2(848, 360)
 metadata/_edit_group_ = true
 
 [node name="Platforms" type="Node2D" parent="."]
