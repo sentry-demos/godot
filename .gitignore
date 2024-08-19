@@ -15,5 +15,3 @@ mono_crash.*.json
 # macos
 .DS_Store
 
-# builds
-bin/
