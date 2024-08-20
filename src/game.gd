@@ -2,6 +2,11 @@ extends Node
 
 @onready var player = $Player
 
+func before_send(event):
+	print("[GD] Calling before_send", event)
+	event.url += "_modified_from_godot_side"
+	return event
+
 func _process(_delta: float) -> void:	
 	if Input.is_action_just_pressed("ui_fullscreen"):
 		var mode = DisplayServer.window_get_mode()
