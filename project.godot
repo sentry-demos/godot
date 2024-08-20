@@ -19,7 +19,7 @@ config/bg_color=Color(0.14, 0.14, 0.14, 1)
 
 [autoload]
 
-Game="*res://src/game.gd"
+Global="*res://src/global.gd"
 
 [display]
 

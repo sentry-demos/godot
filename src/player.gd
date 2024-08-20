@@ -34,11 +34,11 @@ func _physics_process(delta):
 func jump():
 	velocity.y = JUMP_VELOCITY
 	# Show jump skid.
-	var skid = Game.instance_scene_on_main(JumpSkid, global_position)
+	var skid = Global.instance_scene_on_main(JumpSkid, global_position)
 	skid.flip_h = sprite.flip_h
 	
-func _on_goal_detector_area_area_entered(goal: Area2D):
-	await Game.wait(0.16)
+func _on_goal_detector_area_area_entered(_goal: Area2D):
+	await Global.wait(0.16)
 	can_move = false
 	velocity = Vector2.ZERO
 	sprite.play("cheer")
