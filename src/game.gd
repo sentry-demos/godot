@@ -2,9 +2,6 @@ extends Node
 
 @onready var player = $Player
 
-func _init():
-	SentrySdk.captureMessasge()
-
 func _process(_delta: float) -> void:	
 	if Input.is_action_just_pressed("ui_fullscreen"):
 		var mode = DisplayServer.window_get_mode()
