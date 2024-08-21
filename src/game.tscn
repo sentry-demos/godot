@@ -6,8 +6,11 @@
 [ext_resource type="PackedScene" uid="uid://uqwd8fku0yb" path="res://src/player.tscn" id="2_i4rd4"]
 
 [node name="SentryGame" type="SentryNode"]
+dsn = "https://3f1e095cf2e14598a0bd5b4ff324f712@o447951.ingest.us.sentry.io/6680910"
 debug = true
-sample_rate = 0.4
+release = "0.0.1"
+environment = "development"
+sample_rate = 1.0
 script = ExtResource("1_6it2k")
 
 [node name="Goal" parent="." instance=ExtResource("2_18vqm")]
