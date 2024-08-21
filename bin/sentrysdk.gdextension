@@ -22,3 +22,7 @@ android.debug.x86_64 = "res://bin/libsentry.android.template_debug.x86_64.so"
 android.release.x86_64 = "res://bin/libsentry.android.template_release.x86_64.so"
 android.debug.arm64 = "res://bin/libsentry.android.template_debug.arm64.so"
 android.release.arm64 = "res://bin/libsentry.android.template_release.arm64.so"
+
+[icons]
+
+SentryNode = "res://bin/libsentry.macos.template_debug.framework/sentry_icon.svg"
