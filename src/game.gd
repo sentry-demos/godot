@@ -3,13 +3,10 @@ extends Node
 @onready var player = $Player
 
 func before_send(event):
-	event.message.formatted += "_modified_from_godot_side"
+	event.message.formatted += " + but hello from before_send!"
 	return event
 
-func _process(_delta: float) -> void:
-	if Input.is_key_pressed(KEY_P):
-		SentrySdk.capture_message("pressed P!")
-	
+func _process(_delta: float) -> void:	
 	if Input.is_action_just_pressed("ui_fullscreen"):
 		var mode = DisplayServer.window_get_mode()
 		if mode == DisplayServer.WINDOW_MODE_FULLSCREEN:
