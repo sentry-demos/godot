@@ -8,6 +8,7 @@ func instance_scene_on_main(scene: PackedScene, position: Vector2):
 	return instance
 	
 func reset_scene():
+	print("Resetting scene.")
 	get_tree().call_group("instanced", "queue_free")
 	get_tree().reload_current_scene()
 	

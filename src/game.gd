@@ -6,6 +6,9 @@ func before_send(event):
 	event.message.formatted += " + but hello from before_send!"
 	return event
 
+func _ready() -> void:
+	print("Game starting!")
+
 func _process(_delta: float) -> void:	
 	if Input.is_action_just_pressed("ui_fullscreen"):
 		var mode = DisplayServer.window_get_mode()

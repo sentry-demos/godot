@@ -1,16 +1,11 @@
 [gd_scene load_steps=5 format=3 uid="uid://weeiht8hunpe"]
 
-[ext_resource type="Script" path="res://src/game.gd" id="1_6it2k"]
+[ext_resource type="Script" uid="uid://bw25dfet5kse8" path="res://src/game.gd" id="1_6it2k"]
 [ext_resource type="PackedScene" uid="uid://bvlke5sdpc0bg" path="res://src/platform.tscn" id="1_43gg5"]
 [ext_resource type="PackedScene" uid="uid://b8tfilcskjrcm" path="res://src/goal.tscn" id="2_18vqm"]
 [ext_resource type="PackedScene" uid="uid://uqwd8fku0yb" path="res://src/player.tscn" id="2_i4rd4"]
 
-[node name="SentryGame" type="SentryNode"]
-dsn = "https://3f1e095cf2e14598a0bd5b4ff324f712@o447951.ingest.us.sentry.io/6680910"
-debug = true
-release = "0.0.1"
-environment = "development"
-sample_rate = 1.0
+[node name="Game" type="Node2D"]
 script = ExtResource("1_6it2k")
 
 [node name="Goal" parent="." instance=ExtResource("2_18vqm")]

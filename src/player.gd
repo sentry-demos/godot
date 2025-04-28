@@ -19,7 +19,6 @@ func _physics_process(delta):
 		# Handle jump.
 		if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 			jump()
-			SentrySdk.capture_error("No jumping!")
 			
 		# Get the input direction and handle the movement/deceleration.
 		# As good practice, you should replace UI actions with custom gameplay actions.
@@ -33,13 +32,14 @@ func _physics_process(delta):
 	move_and_slide()
 	
 func jump():
+	#SentrySDK.add_breadcrumb("Jumping!", "Note")
 	velocity.y = JUMP_VELOCITY
 	# Show jump skid.
 	var skid = Global.instance_scene_on_main(JumpSkid, global_position)
 	skid.flip_h = sprite.flip_h
 	
-func _on_goal_detector_area_area_entered(_goal: Area2D):
-	await Global.wait(0.16)
-	can_move = false
-	velocity = Vector2.ZERO
-	sprite.play("cheer")
+#func _on_goal_detector_area_area_entered(_goal: Area2D):
+	#await Global.wait(0.16)
+	#can_move = false
+	#velocity = Vector2.ZERO
+	#sprite.play("cheer")

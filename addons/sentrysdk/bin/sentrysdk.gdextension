@@ -1,0 +1,43 @@
+[configuration]
+
+entry_symbol = "gdextension_init"
+compatibility_minimum = "4.3"
+
+[libraries]
+
+macos.debug = "res://addons/sentrysdk/bin/macos/libsentrysdk.macos.debug.framework"
+macos.release = "res://addons/sentrysdk/bin/macos/libsentrysdk.macos.release.framework"
+;windows.debug.x86_32 = "res://addons/sentrysdk/bin/windows/libsentrysdk.windows.debug.x86_32.dll"
+;windows.release.x86_32 = "res://addons/sentrysdk/bin/windows/libsentrysdk.windows.release.x86_32.dll"
+windows.debug.x86_64 = "res://addons/sentrysdk/bin/windows/libsentrysdk.windows.debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/sentrysdk/bin/windows/libsentrysdk.windows.release.x86_64.dll"
+linux.debug.x86_64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.debug.x86_64.so"
+linux.release.x86_64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.release.x86_64.so"
+;linux.debug.arm64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.debug.arm64.so"
+;linux.release.arm64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.release.arm64.so"
+;linux.debug.rv64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.debug.rv64.so"
+;linux.release.rv64 = "res://addons/sentrysdk/bin/linux/libsentrysdk.linux.release.rv64.so"
+;android.debug.arm64 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.debug.arm64.so"
+;android.release.arm64 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.release.arm64.so"
+;android.debug.arm32 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.debug.arm32.so"
+;android.release.arm32 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.release.arm32.so"
+;android.debug.x86_64 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.debug.x86_64.so"
+;android.release.x86_64 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.release.x86_64.so"
+;android.debug.x86_32 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.debug.x86_32.so"
+;android.release.x86_32 = "res://addons/sentrysdk/bin/android/libsentrysdk.android.release.x86_32.so"
+;web.debug.wasm32 = "res://addons/sentrysdk/bin/web/libsentrysdk.web.debug.wasm32.wasm"
+;web.release.wasm32 = "res://addons/sentrysdk/bin/web/libsentrysdk.web.release.wasm32.wasm"
+
+[dependencies]
+
+linux.x86_64 = {
+	"res://addons/sentrysdk/bin/linux/crashpad_handler" : ""
+}
+
+windows.x86_64 = {
+	"res://addons/sentrysdk/bin/windows/crashpad_handler.exe" : ""
+}
+
+macos = {
+	"res://addons/sentrysdk/bin/macos/crashpad_handler" : ""
+}
