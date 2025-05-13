@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # allows manual runs
 
 jobs:
-  run-script:
+  run-demo:
     runs-on: windows-latest
     timeout-minutes: 10
 
