@@ -3,11 +3,12 @@ extends Area2D
 
 
 @export var animation_player: AnimationPlayer
+@export var victory_animation: StringName = "victory"
 
 
 func _play_victory_animation():
 	# Results in error since "victory" animation doesn't exist.
-	animation_player.play("victory")
+	animation_player.play(victory_animation)
 
 
 func _on_body_entered(_player: CharacterBody2D):
