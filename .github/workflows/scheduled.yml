@@ -29,4 +29,4 @@ jobs:
 
       - name: Run demo
         shell: bash
-        run: ./tools/godot.windows.template_release.x86_64.exe --headless --path . --automate || true
+        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate --verbose || true
