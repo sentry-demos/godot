@@ -2,6 +2,8 @@ extends Node
 
 @onready var player = $Player
 
+const LEVEL_BOTTOM_BOUNDARY := 2000
+
 
 func _ready() -> void:
 	print("Game starting!")
@@ -20,7 +22,7 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(_delta):
-	if player and player.position.y > 2000:
+	if player and player.position.y > LEVEL_BOTTOM_BOUNDARY:
 		# Detect player falling through level boundaries as error.
 		push_error("Player left playable area! Restarting scene.")
 		Global.reset_scene()
