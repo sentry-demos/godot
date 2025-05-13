@@ -1,0 +1,32 @@
+name: Run Demo Every 30 Minutes
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: # allows manual runs
+
+jobs:
+  run-script:
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: godot-4.5
+
+      - name: Unzip Godot build
+        shell: bash
+        run: |
+          cd tools
+          unzip godot.windows.template_release.x86_64.zip
+          unzip godot.windows.editor.x86_64.zip
+
+      - name: Import project
+        shell: bash
+        run: ./tools/godot.windows.editor.x86_64.exe --headless --editor --path . --quit-after 2000 || true
+
+      - name: Run demo
+        shell: bash
+        run: ./tools/godot.windows.template_release.x86_64.exe --headless --path . --automate || true
