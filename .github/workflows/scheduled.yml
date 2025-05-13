@@ -23,6 +23,11 @@ jobs:
           unzip godot.windows.template_release.x86_64.zip
           unzip godot.windows.editor.x86_64.zip
 
+      - name: Set up VulkanCI for SwiftShader (CPU-based Vulkan API)
+        uses: NcStudios/VulkanCI@v1.2
+        with:
+          sdkVersion: 1.4.309.0
+
       - name: Import project
         shell: bash
         run: ./tools/godot.windows.editor.x86_64.exe --headless --editor --path . --quit-after 2000 || true
