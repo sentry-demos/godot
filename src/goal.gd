@@ -1,10 +1,12 @@
 extends Area2D
+## Triggers victory animation when entered... except it doesn't exist, so this results in error.
+
 
 @export var animation_player: AnimationPlayer
 
 
 func _play_victory_animation():
-	# Results in error as "victory" animation doesn't exist.
+	# Results in error since "victory" animation doesn't exist.
 	animation_player.play("victory")
 
 
