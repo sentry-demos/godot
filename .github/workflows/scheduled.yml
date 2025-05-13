@@ -23,10 +23,16 @@ jobs:
           unzip godot.windows.template_release.x86_64.zip
           unzip godot.windows.editor.x86_64.zip
 
-      - name: Set up VulkanCI for SwiftShader (CPU-based Vulkan API)
-        uses: NcStudios/VulkanCI@v1.2
-        with:
-          sdkVersion: 1.4.309.0
+      - name: Install SwiftShader
+        shell: bash
+        env:
+          SWIFTSHADER_URL: https://github.com/jakoch/rasterizers/releases/download/20250311/swiftshader-win64-5.0.0.1.zip
+        run: |
+          curl -L -o swiftshader.zip "${SWIFTSHADER_URL}"
+          mkdir swiftshader
+          unzip swiftshader.zip -d swiftshader
+          rm swiftshader.zip
+          echo "${GITHUB_WORKSPACE}/swiftshader" >> $GITHUB_PATH
 
       - name: Import project
         shell: bash
