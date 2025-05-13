@@ -1,9 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://weeiht8hunpe"]
+[gd_scene load_steps=10 format=3 uid="uid://weeiht8hunpe"]
 
 [ext_resource type="Script" uid="uid://bw25dfet5kse8" path="res://src/game.gd" id="1_6it2k"]
 [ext_resource type="PackedScene" uid="uid://bvlke5sdpc0bg" path="res://src/platform.tscn" id="1_43gg5"]
 [ext_resource type="PackedScene" uid="uid://b8tfilcskjrcm" path="res://src/goal.tscn" id="2_18vqm"]
 [ext_resource type="PackedScene" uid="uid://uqwd8fku0yb" path="res://src/player.tscn" id="2_i4rd4"]
+[ext_resource type="Script" uid="uid://dpykfory8lb5c" path="res://src/crash_zone.gd" id="5_bs6l1"]
+[ext_resource type="Script" uid="uid://cgolbrlk5yyug" path="res://src/automator.gd" id="6_pk08u"]
+[ext_resource type="PackedScene" uid="uid://cclcwj8vx3h8k" path="res://src/jump_cue.tscn" id="7_wqvko"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kc8ui"]
+size = Vector2(200, 40)
+
+[sub_resource type="LabelSettings" id="LabelSettings_bs6l1"]
+font_color = Color(0.87451, 0.294118, 0.462745, 1)
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 0.47451)
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_6it2k")
@@ -26,3 +37,40 @@ position = Vector2(824, 400)
 
 [node name="Player" parent="." instance=ExtResource("2_i4rd4")]
 position = Vector2(344, 376)
+
+[node name="CrashZone" type="Area2D" parent="."]
+position = Vector2(101, 625)
+script = ExtResource("5_bs6l1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CrashZone"]
+shape = SubResource("RectangleShape2D_kc8ui")
+debug_color = Color(0.844872, 0.273174, 0.663733, 0.42)
+metadata/_edit_lock_ = true
+
+[node name="Polygon2D" type="Polygon2D" parent="CrashZone"]
+position = Vector2(-1, 1)
+color = Color(0.87451, 0.294118, 0.462745, 0.262745)
+polygon = PackedVector2Array(102, -34, 105, 22, -99, 22, -93, -35)
+
+[node name="Label" type="Label" parent="CrashZone"]
+offset_left = -50.0
+offset_top = -18.0
+offset_right = -10.0
+offset_bottom = 5.0
+text = "CRASH ZONE!"
+label_settings = SubResource("LabelSettings_bs6l1")
+horizontal_alignment = 1
+
+[node name="Automator" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("6_pk08u")
+player = NodePath("../Player")
+
+[node name="JumpCue1" parent="Automator" instance=ExtResource("7_wqvko")]
+position = Vector2(411, 480)
+
+[node name="JumpCue2" parent="Automator" instance=ExtResource("7_wqvko")]
+position = Vector2(688, 388)
+
+[connection signal="area_entered" from="CrashZone" to="CrashZone" method="_on_area_entered"]
+[connection signal="area_entered" from="Automator/JumpCue1" to="Automator" method="_on_jump_cue_area_entered"]
+[connection signal="area_entered" from="Automator/JumpCue2" to="Automator" method="_on_jump_cue_area_entered"]

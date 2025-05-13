@@ -2,12 +2,10 @@ extends Node
 
 @onready var player = $Player
 
-func before_send(event):
-	event.message.formatted += " + but hello from before_send!"
-	return event
 
 func _ready() -> void:
 	print("Game starting!")
+
 
 func _process(_delta: float) -> void:	
 	if Input.is_action_just_pressed("ui_fullscreen"):
@@ -19,9 +17,10 @@ func _process(_delta: float) -> void:
 			
 	if Input.is_action_just_pressed("ui_reset"):
 		Global.reset_scene()
-		
+
+
 func _physics_process(_delta):
-	# Reset the game if the player fell down
-	if player and player.position.y > 800:
-		await Global.wait(0.16)
+	if player and player.position.y > 2000:
+		# Detect player falling through level boundaries as error.
+		push_error("Player got beyond level bounds! Restarting level.")
 		Global.reset_scene()

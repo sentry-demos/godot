@@ -13,7 +13,7 @@ config_version=5
 config/name="Sentry Jump"
 config/version="1"
 run/main_scene="res://src/game.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 config/defaults/default_clear_color=Color(0.3, 0.3, 0.3, 1)
 config/bg_color=Color(0.14, 0.14, 0.14, 1)
@@ -45,12 +45,13 @@ ui_reset={
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 
 [sentry]
 
-options/dsn="https://917b64da196444b038192fb90afbb912@o4505409036943360.ingest.us.sentry.io/4508970603839488"
+options/dsn="https://1ca5582b5168b1e57796c413812c8174@o4509311580635136.ingest.de.sentry.io/4509311583584336"
 options/attach_screenshot=true
+options/attach_scene_tree=true
+options/screenshot_level=3
+logger/include_variables=true

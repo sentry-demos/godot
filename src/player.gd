@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody2D
 
 var JumpSkid = preload("res://src/jumo_skid.tscn")
@@ -8,6 +9,9 @@ const JUMP_VELOCITY = -450
 const GRAVITY = 900
 
 @onready var sprite = $AnimatedSprite
+
+var move_request: float = 0.0
+
 
 func _physics_process(delta):	
 	# Add the gravity.
@@ -22,24 +26,28 @@ func _physics_process(delta):
 			
 		# Get the input direction and handle the movement/deceleration.
 		# As good practice, you should replace UI actions with custom gameplay actions.
-		var direction = Input.get_axis("ui_left", "ui_right")
-		if direction:
-			velocity.x = direction * SPEED
-			sprite.flip_h = direction < 0
+		move_request += Input.get_axis("ui_left", "ui_right")
+		move_request = clampf(move_request, -1.0, 1.0)
+		
+		if move_request:
+			velocity.x = move_request * SPEED
+			sprite.flip_h = move_request < 0
 		else:
 			velocity.x = move_toward(velocity.x, 0, SPEED)
+	
+	move_request = 0.0
 		
 	move_and_slide()
-	
+
+
 func jump():
-	#SentrySDK.add_breadcrumb("Jumping!", "Note")
+	SentrySDK.add_breadcrumb("Jumping!", "Note")
 	velocity.y = JUMP_VELOCITY
 	# Show jump skid.
 	var skid = Global.instance_scene_on_main(JumpSkid, global_position)
 	skid.flip_h = sprite.flip_h
+
+
+func move(direction: float) -> void:
+	move_request += direction
 	
-#func _on_goal_detector_area_area_entered(_goal: Area2D):
-	#await Global.wait(0.16)
-	#can_move = false
-	#velocity = Vector2.ZERO
-	#sprite.play("cheer")
