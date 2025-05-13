@@ -22,6 +22,11 @@ config/bg_color=Color(0.14, 0.14, 0.14, 1)
 
 Global="*res://src/global.gd"
 
+[debug]
+
+settings/gdscript/always_track_call_stacks=true
+settings/gdscript/always_track_local_variables=true
+
 [display]
 
 window/size/window_width_override=2304
@@ -51,6 +56,7 @@ environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 [sentry]
 
 options/dsn="https://1ca5582b5168b1e57796c413812c8174@o4509311580635136.ingest.de.sentry.io/4509311583584336"
+options/debug_printing=1
 options/attach_screenshot=true
 options/attach_scene_tree=true
 options/screenshot_level=3
