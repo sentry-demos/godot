@@ -23,7 +23,7 @@ jobs:
           unzip godot.windows.template_release.x86_64.zip
           unzip godot.windows.editor.x86_64.zip
 
-      - name: Install SwiftShader
+      - name: Install SwiftShader (CPU-based Vulkan implementation)
         shell: bash
         env:
           SWIFTSHADER_URL: https://github.com/jakoch/rasterizers/releases/download/20250311/swiftshader-win64-5.0.0.1.zip
@@ -36,8 +36,8 @@ jobs:
 
       - name: Import project
         shell: bash
-        run: ./tools/godot.windows.editor.x86_64.exe --headless --editor --path . --quit-after 2000 || true
+        run: ./tools/godot.windows.editor.x86_64.exe --headless --editor --import --path . || true
 
       - name: Run demo
         shell: bash
-        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate --verbose || true
+        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate || true
