@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://cclcwj8vx3h8k" path="res://src/jump_cue.tscn" id="7_wqvko"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kc8ui"]
-size = Vector2(200, 40)
+size = Vector2(331, 50)
 
 [sub_resource type="LabelSettings" id="LabelSettings_bs6l1"]
 font_color = Color(0.87451, 0.294118, 0.462745, 1)
@@ -19,9 +19,12 @@ shadow_color = Color(0, 0, 0, 0.47451)
 [node name="Game" type="Node2D"]
 script = ExtResource("1_6it2k")
 
-[node name="Goal" parent="." instance=ExtResource("2_18vqm")]
+[node name="Goal" parent="." node_paths=PackedStringArray("animation_player") instance=ExtResource("2_18vqm")]
 position = Vector2(848, 360)
+animation_player = NodePath("../AnimationPlayer")
 metadata/_edit_group_ = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
 [node name="Platforms" type="Node2D" parent="."]
 position = Vector2(-24, -8)
@@ -43,6 +46,7 @@ position = Vector2(101, 625)
 script = ExtResource("5_bs6l1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CrashZone"]
+position = Vector2(-49.5, 5)
 shape = SubResource("RectangleShape2D_kc8ui")
 debug_color = Color(0.844872, 0.273174, 0.663733, 0.42)
 metadata/_edit_lock_ = true
