@@ -19,7 +19,7 @@ shadow_color = Color(0, 0, 0, 0.47451)
 [node name="Game" type="Node2D"]
 script = ExtResource("1_6it2k")
 
-[node name="Goal" parent="." node_paths=PackedStringArray("animation_player") instance=ExtResource("2_18vqm")]
+[node name="FirstGoal" parent="." node_paths=PackedStringArray("animation_player") instance=ExtResource("2_18vqm")]
 position = Vector2(848, 360)
 animation_player = NodePath("../AnimationPlayer")
 metadata/_edit_group_ = true

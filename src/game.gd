@@ -2,11 +2,12 @@ extends Node
 
 @onready var player = $Player
 
-const LEVEL_BOTTOM_BOUNDARY := 2000
+var level_bottom := 2000
 
 
 func _ready() -> void:
 	print("Game starting!")
+	SentrySDK.set_tag("level", "clouds")
 
 
 func _process(_delta: float) -> void:
@@ -22,7 +23,11 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(_delta):
-	if player and player.position.y > LEVEL_BOTTOM_BOUNDARY:
+	if not is_instance_valid(player):
+		return
+
+	var pos: Vector2 = player.position
+	if pos.y > level_bottom:
 		# Detect player falling through level boundaries as error.
 		push_error("Player left playable area! Restarting scene.")
 		Global.reset_scene()
