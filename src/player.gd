@@ -15,6 +15,12 @@ const GRAVITY = 900
 var move_request: float = 0.0
 
 
+func _ready() -> void:
+	# Setting a tag example.
+	var player_type = "VIP" if randf() < 0.2 else "regular"
+	SentrySDK.set_tag("player_category", player_type)
+
+
 func _physics_process(delta):
 	# Add the gravity.
 	if not is_on_floor():
