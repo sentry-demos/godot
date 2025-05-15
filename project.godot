@@ -55,7 +55,7 @@ environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 
 [sentry]
 
-options/dsn="https://1ca5582b5168b1e57796c413812c8174@o4509311580635136.ingest.de.sentry.io/4509311583584336"
+options/dsn="https://d9f0839b4ad9d34b32a772c8777a2738@o447951.ingest.us.sentry.io/4509325786021888"
 options/debug_printing=1
 options/attach_screenshot=true
 options/attach_scene_tree=true
