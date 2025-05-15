@@ -1,7 +1,6 @@
 # GDExtension generated files
 *.gen.*
 .sconsign*.dblite
-bin/
 compile_commands.json
 src/gen/
 
