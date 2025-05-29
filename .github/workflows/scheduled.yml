@@ -37,6 +37,18 @@ jobs:
       - name: Build SwiftShader
         if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
         run: tools/build-swiftshader.ps1
+      
+      - name: Install sentry-cli
+        if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
+        run: pip install sentry-cli
+
+      - name: Upload SwiftShader debug files
+        if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: sentry-cli debug-files upload --include-sources tools/vulkan-1.dll tools/vulkan-1.pdb
 
       - name: Import project
         shell: bash
