@@ -25,14 +25,10 @@ jobs:
 
       - name: Install SwiftShader (CPU-based Vulkan implementation)
         shell: bash
-        env:
-          SWIFTSHADER_URL: https://github.com/jakoch/rasterizers/releases/download/20250311/swiftshader-win64-5.0.0.1.zip
         run: |
-          curl -L -o swiftshader.zip "${SWIFTSHADER_URL}"
-          mkdir swiftshader
+          cd tools/
           unzip swiftshader.zip -d swiftshader
-          rm swiftshader.zip
-          echo "${GITHUB_WORKSPACE}/swiftshader" >> $GITHUB_PATH
+          echo "${GITHUB_WORKSPACE}/tools/swiftshader" >> $GITHUB_PATH
 
       - name: Import project
         shell: bash
