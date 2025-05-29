@@ -5,6 +5,10 @@ on:
     - cron: "*/30 * * * *"
   workflow_dispatch: # allows manual runs
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   run-demo:
     runs-on: windows-latest
@@ -22,13 +26,17 @@ jobs:
           cd tools
           unzip godot.windows.template_release.x86_64.zip
           unzip godot.windows.editor.x86_64.zip
-
-      - name: Install SwiftShader (CPU-based Vulkan implementation)
-        shell: bash
-        run: |
-          cd tools/
-          unzip swiftshader.zip -d swiftshader
-          echo "${GITHUB_WORKSPACE}/tools/swiftshader" >> $GITHUB_PATH
+      
+      - name: Cache SwiftShader
+        uses: actions/cache@v4
+        id: cache-swiftshader
+        with:
+          path: tools/vulkan-1.dll
+          key: swiftshader
+      
+      - name: Build SwiftShader
+        if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
+        run: tools/build-swiftshader.ps1
 
       - name: Import project
         shell: bash
