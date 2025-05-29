@@ -8,6 +8,9 @@ param (
 
 Set-StrictMode -Version latest
 
+$scriptDir = Split-Path -Parent (Resolve-Path $MyInvocation.MyCommand.Path)
+Set-Location "$scriptDir"
+
 # Clone/update Godot Engine repo
 if (-not (Test-Path -Path "godot")) {
 	git clone --depth=1 --branch=$Ref https://github.com/godotengine/godot.git godot
