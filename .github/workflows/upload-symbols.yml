@@ -1,0 +1,35 @@
+name: Upload debug symbols
+
+on:
+  push:
+    branches:
+      - "main"
+      - "godot-4.5"
+    paths:
+      - "addons/**"
+
+  workflow_dispatch: # allows manual runs
+
+jobs:
+  upload-symbols:
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: godot-4.5
+          fetch-depth: 1
+
+      - name: Install sentry-cli
+        run: pip install sentry-cli
+
+      - name: Upload debug information files
+        shell: bash
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          find addons/ \( -name "*.pdb" -o -name "*.dll" -o -name "*.src.zip" \) -print0 | xargs -0 sentry-cli debug-files upload --org ${SENTRY_ORG} --project ${SENTRY_PROJECT}
