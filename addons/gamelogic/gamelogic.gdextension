@@ -6,8 +6,8 @@ reloadable = true
 
 [libraries]
 
-macos.debug = "./bin/libgamelogic.macos.debug.framework"
-macos.release = "./bin/libgamelogic.macos.release.framework"
+macos.debug = "./bin/libgamelogic.macos.debug.universal.dylib"
+macos.release = "./bin/libgamelogic.macos.release.universal.dylib"
 windows.debug.x86_64 = "./bin/gamelogic.windows.debug.x86_64.dll"
 windows.release.x86_64 = "./bin/gamelogic.windows.release.x86_64.dll"
 linux.debug.x86_64 = "./bin/libgamelogic.linux.debug.x86_64.so"
