@@ -61,6 +61,7 @@ environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 
 options/dsn="https://d9f0839b4ad9d34b32a772c8777a2738@o447951.ingest.us.sentry.io/4509325786021888"
 options/debug_printing=1
+options/configuration_script="uid://tltw6k221xjo"
 options/attach_screenshot=true
 options/attach_scene_tree=true
 options/screenshot_level=3
