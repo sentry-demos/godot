@@ -16,7 +16,6 @@ src/gen/
 *.lib
 *.o
 *.os
-*.pdb
 *.pyc
 *.so
 *.obj
