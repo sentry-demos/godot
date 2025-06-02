@@ -26,18 +26,18 @@ jobs:
           cd tools
           unzip godot.windows.template_release.x86_64.zip
           unzip godot.windows.editor.x86_64.zip
-      
+
       - name: Cache SwiftShader
         uses: actions/cache@v4
         id: cache-swiftshader
         with:
           path: tools/vulkan-1.dll
           key: swiftshader
-      
+
       - name: Build SwiftShader
         if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
         run: tools/build-swiftshader.ps1
-      
+
       - name: Install sentry-cli
         if: ${{ !steps.cache-swiftshader.outputs.cache-hit }}
         run: pip install sentry-cli
@@ -56,4 +56,6 @@ jobs:
 
       - name: Run demo
         shell: bash
-        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate || true
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate --dsn=${SENTRY_DSN} || true
