@@ -37,15 +37,18 @@ else {
 
 scons platform=windows target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
 
-Move-Item -Path "bin/godot.windows.template_release.x86_64.exe" -Destination "../godot.windows.template_release.x86_64.exe" -Force
-Move-Item -Path "bin/godot.windows.template_release.x86_64.pdb" -Destination "../godot.windows.template_release.x86_64.pdb" -Force
+Move-Item -Path "bin\godot.windows.template_release.x86_64.exe" -Destination "..\" -Force
+Move-Item -Path "bin\godot.windows.template_release.x86_64.console.exe" -Destination "..\" -Force
+Move-Item -Path "bin\godot.windows.template_release.x86_64.pdb" -Destination "..\" -Force
+Move-Item -Path "bin\godot.windows.template_release.x86_64.console.pdb" -Destination "..\" -Force
 
 Set-Location -Path ".."
 
-Compress-Archive -Path "godot.windows.template_release.x86_64.exe" -DestinationPath "godot.windows.template_release.x86_64.zip" -CompressionLevel Optimal -Force
-Compress-Archive -Path "godot.windows.template_release.x86_64.pdb" -DestinationPath "godot.windows.template_release.x86_64.debug_symbols.zip" -CompressionLevel Optimal -Force
-
 sentry-cli debug-files bundle-sources godot.windows.template_release.x86_64.pdb
+sentry-cli debug-files bundle-sources godot.windows.template_release.x86_64.console.pdb
+
+Compress-Archive -Path "godot.windows.template_release.x86_64*.exe" -DestinationPath "godot.windows.template_release.x86_64.zip" -CompressionLevel Optimal -Force
+Compress-Archive -Path "godot.windows.template_release.x86_64*.pdb","godot.windows.template_release.x86_64*.src.zip" -DestinationPath "godot.windows.template_release.x86_64.debug_files.zip" -CompressionLevel Optimal -Force
 
 
 # ***** EDITOR *****
@@ -54,12 +57,15 @@ Set-Location -Path "godot"
 
 scons platform=windows target=editor production=yes debug_symbols=yes separate_debug_symbols=yes
 
-Move-Item -Path "bin/godot.windows.editor.x86_64.exe" -Destination "../godot.windows.editor.x86_64.exe" -Force
-Move-Item -Path "bin/godot.windows.editor.x86_64.pdb" -Destination "../godot.windows.editor.x86_64.pdb" -Force
+Move-Item -Path "bin/godot.windows.editor.x86_64.exe" -Destination "../" -Force
+Move-Item -Path "bin/godot.windows.editor.x86_64.console.exe" -Destination "../" -Force
+Move-Item -Path "bin/godot.windows.editor.x86_64.pdb" -Destination "../" -Force
+Move-Item -Path "bin/godot.windows.editor.x86_64.console.pdb" -Destination "../" -Force
 
 Set-Location -Path ".."
 
-Compress-Archive -Path "godot.windows.editor.x86_64.exe" -DestinationPath "godot.windows.editor.x86_64.zip" -CompressionLevel Optimal -Force
-
 sentry-cli debug-files bundle-sources godot.windows.editor.x86_64.pdb
+sentry-cli debug-files bundle-sources godot.windows.editor.x86_64.console.pdb
 
+Compress-Archive -Path "godot.windows.editor.x86_64*.exe" -DestinationPath "godot.windows.editor.x86_64.zip" -CompressionLevel Optimal -Force
+Compress-Archive -Path "godot.windows.editor.x86_64*.pdb","godot.windows.editor.x86_64*.src.zip" -DestinationPath "godot.windows.editor.x86_64.debug_files.zip" -CompressionLevel Optimal -Force

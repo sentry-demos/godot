@@ -12,11 +12,15 @@ compile_commands.json
 # Tools
 tools/godot.macos.editor.arm64
 tools/godot.windows.editor.x86_64.exe
+tools/godot.windows.editor.x86_64.console.exe
 tools/godot.windows.editor.x86_64.src.zip
-tools/godot.windows.editor.x86_64.debug_symbols.zip
+tools/godot.windows.editor.x86_64.console.src.zip
+tools/godot.windows.editor.x86_64.debug_files.zip
 tools/godot.windows.template_release.x86_64.exe
+tools/godot.windows.template_release.x86_64.console.exe
 tools/godot.windows.template_release.x86_64.src.zip
-tools/godot.windows.template_release.x86_64.debug_symbols.zip
+tools/godot.windows.template_release.x86_64.console.src.zip
+tools/godot.windows.template_release.x86_64.debug_files.zip
 tools/godot/
 tools/*.dSYM/
 tools/*.pdb
