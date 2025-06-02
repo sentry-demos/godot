@@ -10,8 +10,9 @@ $scriptDir = Split-Path -Parent (Resolve-Path $MyInvocation.MyCommand.Path)
 Set-Location -Path "$scriptDir\.."
 
 scons platform=windows target=template_release debug_symbols=yes
+scons platform=windows target=editor debug_symbols=yes
 
-Set-Location -Path ".\addons\gamelogic\bin\"
+Set-Location "addons\gamelogic\bin\"
 
 sentry-cli debug-files bundle-sources gamelogic.windows.debug.x86_64.pdb
 sentry-cli debug-files bundle-sources gamelogic.windows.release.x86_64.pdb
