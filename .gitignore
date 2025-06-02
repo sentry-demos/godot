@@ -3,6 +3,7 @@
 
 # Godot-specific ignores
 .import/
+export_presets.cfg
 
 # GDExtensions
 .cache
