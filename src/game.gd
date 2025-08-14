@@ -8,6 +8,9 @@ var level_bottom := 2000
 func _ready() -> void:
 	print("Game starting!")
 	SentrySDK.set_tag("level", "clouds")
+	var user := SentryUser.new()
+	user.generate_new_id()
+	SentrySDK.set_user(user)
 
 
 func _process(_delta: float) -> void:
@@ -31,3 +34,4 @@ func _physics_process(_delta):
 		# Detect player falling through level boundaries as error.
 		push_error("Player left playable area! Restarting scene.")
 		Global.reset_scene()
+
