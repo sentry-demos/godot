@@ -12,7 +12,7 @@ If you're new to Godot, follow these simple steps to run the demo:
 
 - Download and install [Godot 4.5-dev4](https://godotengine.org/article/dev-snapshot-godot-4-5-dev-4/#downloads) or newer for your operating system
 - Extract the Godot executable (Godot.app) to a location on your computer
-- Clone this demo repo (`godot/`) locally so you can run the game
+- Clone this demo repo locally (`git clone git@github.com:sentry-demos/godot.git`)
 
 ### Step 1: Open Godot
 
