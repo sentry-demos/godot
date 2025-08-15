@@ -66,11 +66,11 @@ When the player jumps into the "Crash Zone," the game triggers a crash in the `C
 
 ![Trigger crash](screenshots/gameplay_instructions_to_trigger_crash.png)
 
-### (Extremely Optional) Step 7: Jump Into the Crash Zone to trigger a crash
+### (Extremely Optional) Step 7: Fall off the platform to trigger another runtime error
 
-(skip this during a live demo, it's redundant since you already jumped to the flag, but you can do it if you want to generate additional data for any reason)
+If the player goes off the platform and falls down, they reach the limits of the level, resulting in another runtime error.
 
-If a player goes off the platform and falls down, they reach the limits of the level, resulting in another runtime error.
+**Note:** (I'd skip this during a live demo. It's redundant since you already jumped to the flag to generate a runtime error, but you can do it if you want an additional runtime error for any reason)
 
 ![Trigger crash](screenshots/fall_off_platform.png)
 
