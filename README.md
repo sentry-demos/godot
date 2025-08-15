@@ -45,7 +45,7 @@ If you're new to Godot, follow these simple steps to run the demo:
 
 ![Godot Editor with Play Button Highlighted](screenshots/start_sentry_jump_game.png)
 
-### Step 5: Play the Demo And Trigger a Crash
+### Step 5: Play the Demo And Trigger a Runtime Error
 
 **Game Controls:**
 
@@ -54,11 +54,25 @@ If you're new to Godot, follow these simple steps to run the demo:
 - **F key**: Toggle fullscreen mode
 - **R key**: Reset the scene
 
-**Objective:** Jump to the red flag on the right. When you reach it, the demo will intentionally cause an error to showcase Sentry's crash reporting capabilities!
+**Objective:** Jump to the red flag on the right. When you reach it, the demo will intentionally cause a runtime error (not crash) to showcase Sentry's error reporting capabilities!
 
-**Note:** Currently hitting the flag doesn't fully crash the game, but should trigger an error to be captured in Sentry.
+**Note:** Most errors developers deal with in Godot are runtime non-crash errors. This is because the game logic is usually implemented in a scripting language, and 99% of the time errors don’t cause a crash.
 
-![Game Running in Editor](screenshots/gameplay_instructions_to_trigger_crash.png)
+![Trigger Runtime Error](screenshots/gameplay_instructions_to_trigger_runtime_error.png)
+
+### (Optional) Step 6: Jump Into the Crash Zone to trigger a crash
+
+When the player jumps into the "Crash Zone," the game triggers a crash in the `C++` gamelogic library. This is meant to illustrate a crash connected to some native code.
+
+![Trigger crash](screenshots/gameplay_instructions_to_trigger_crash.png)
+
+### (Extremely Optional) Step 7: Jump Into the Crash Zone to trigger a crash
+
+(skip this during a live demo, it's redundant since you already jumped to the flag, but you can do it if you want to generate additional data for any reason)
+
+If a player goes off the platform and falls down, they reach the limits of the level, resulting in another runtime error.
+
+![Trigger crash](screenshots/fall_off_platform.png)
 
 ### Troubleshooting
 
@@ -68,14 +82,16 @@ If you're new to Godot, follow these simple steps to run the demo:
 
 ## Advanced Usage
 
-### Automated Testing
+### Automate the game without opening Godot Studio
 
-For automated testing, you can run the game from the command line:
+You can also run the game (and make the character jump to the flag) from the command line. This is used to generate bulk demo data, I recommend against running this in a live demo context.
 
 ```bash
 # On macOS
-/Users/yourname/Downloads/Godot.app/Contents/MacOS/Godot --automate
+$ /Users/yourname/Downloads/Godot.app/Contents/MacOS/Godot --path /path/to/sentry-demos/godot/directory/you/cloned --automate
 ```
+
+![automate flag](screenshots/automate.png)
 
 ## Talk slides
 
