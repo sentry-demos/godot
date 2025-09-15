@@ -13,6 +13,7 @@ If you're new to Godot, follow these simple steps to run the demo:
 - Download and install [Godot 4.5-dev4](https://godotengine.org/article/dev-snapshot-godot-4-5-dev-4/#downloads) or newer for your operating system
 - Extract the Godot executable (Godot.app) to a location on your computer
 - Clone this demo repo locally (`git clone git@github.com:sentry-demos/godot.git`)
+- `cd` into this repo and check out the `godot-4.5` branch. (⚠️ for now, that branch holds the current version of the demo. remember to do this!)
 
 ### Step 1: Open Godot
 
