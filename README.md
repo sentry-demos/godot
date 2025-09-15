@@ -82,7 +82,7 @@ If the player goes off the platform and falls down, they reach the limits of the
 
 ## Advanced Usage
 
-### Automate the game without opening Godot Studio
+### Automate the game without opening Godot Engine
 
 You can also run the game (and make the character jump to the flag) from the command line. This is used to generate bulk demo data, I recommend against running this in a live demo context.
 
