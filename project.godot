@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="Sentry Jump"
-config/version="1"
+config/version="1.2.4"
 run/main_scene="res://src/game.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 config/defaults/default_clear_color=Color(0.3, 0.3, 0.3, 1)
 config/bg_color=Color(0.14, 0.14, 0.14, 1)
@@ -22,11 +22,20 @@ config/bg_color=Color(0.14, 0.14, 0.14, 1)
 
 Global="*res://src/global.gd"
 
+[debug]
+
+settings/gdscript/always_track_call_stacks=true
+settings/gdscript/always_track_local_variables=true
+
 [display]
 
 window/size/window_width_override=2304
 window/size/window_height_override=1296
 window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="Sentry Jump"
 
 [input]
 
@@ -45,12 +54,19 @@ ui_reset={
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 
 [sentry]
 
-options/dsn="https://917b64da196444b038192fb90afbb912@o4505409036943360.ingest.us.sentry.io/4508970603839488"
+options/dsn="https://d9f0839b4ad9d34b32a772c8777a2738@o447951.ingest.us.sentry.io/4509325786021888"
+options/debug_printing=1
+options/configuration_script="uid://tltw6k221xjo"
 options/attach_screenshot=true
+options/attach_scene_tree=true
+options/attach_log=true
+options/environment="production"
+options/screenshot_level=3
+logger/include_variables=true
+options/logger_enabled=true
+options/logger_include_source=true
