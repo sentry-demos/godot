@@ -11,12 +11,13 @@ export_presets.cfg
 compile_commands.json
 
 # Tools
-tools/Godot_v*
-tools/linux_*
-tools/windows_*.exe
-tools/Godot.app/
-tools/macos_template.app/
-tools/*.pdb
+/godot/
+/tools/Godot_v*
+/tools/linux_*
+/tools/windows_*.exe
+/tools/Godot.app/
+/tools/macos_template.app/
+/tools/*.pdb
 
 # Imported translations (automatically generated from CSV files)
 *.translation
