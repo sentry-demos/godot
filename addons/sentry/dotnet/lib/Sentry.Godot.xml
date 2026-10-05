@@ -1,0 +1,842 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Sentry.Godot</name>
+    </assembly>
+    <members>
+        <member name="T:Sentry.Godot.ExceptionHandling.FirstChanceExceptionPool">
+             <summary>
+             Collects managed exceptions via FirstChanceException and keeps them in a
+             per-thread FIFO queue for later correlation with CLR catch events.
+             </summary>
+             <remarks>
+             Thread-safety: OnFirstChanceException runs on the throwing thread;
+             DrainPending() runs on the listener's thread and guarded by lock.
+            
+             Capture scope: consumers wrap their capture call in EnterCaptureScope().
+             Any FirstChanceException that fires on the same thread inside that scope is
+             dropped, preventing feedback loops if the capture path itself throws.
+             </remarks>
+        </member>
+        <member name="M:Sentry.Godot.ExceptionHandling.FirstChanceExceptionPool.RemoveThreads(System.Collections.Generic.IReadOnlyList{System.Int64})">
+            <remarks>
+            Called by CoreClrExceptionHandler to clean up dead threads from the pending list.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.ExceptionHandling.CoreClrExceptionHandler">
+             <summary>
+             Detects "unhandled" C# exceptions in Godot by combining FirstChanceException
+             with .NET runtime EventSource events. When ExceptionCatchStart reports a
+             Godot bridge method as the catcher, the exception is classified as unhandled
+             by user code and sent to Sentry.
+             </summary>
+             <remarks>
+             Key insight: FirstChanceException runs on the throwing thread, but
+             EventListener callbacks run on a dedicated background thread. We correlate
+             via OS thread ID. A FIFO queue per thread is needed because multiple
+             FirstChanceException events fire synchronously before the EventListener
+             processes any ExceptionCatchStart(250).
+            
+             ExceptionThrown(80) is emitted before FirstChanceException, but their
+             arrival order on the listener side is racey, so we must not depend on it.
+             The only reliable ordering here is that both arrive before
+             ExceptionCatchStart(250).
+            
+             See: https://learn.microsoft.com/en-us/dotnet/fundamentals/diagnostics/runtime-exception-events
+             </remarks>
+        </member>
+        <member name="M:Sentry.Godot.ExceptionHandling.CoreClrExceptionHandler.HandleExceptionThrown(System.Diagnostics.Tracing.EventWrittenEventArgs)">
+            <remarks>
+            Runs on the listener thread.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.ExceptionHandling.CoreClrExceptionHandler.HandleExceptionCatchStart(System.Diagnostics.Tracing.EventWrittenEventArgs)">
+            <remarks>
+            Runs on the listener thread.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.ExceptionHandling.CoreClrExceptionHandler.CleanupDeadThreads">
+            <remarks>
+            Dead threads observed this cycle are removed next cycle, so in-flight
+            events have time to drain.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.ExceptionHandling.CoreClrExceptionHandler.GetGodotBridgeName(System.String)">
+            <summary>
+            Returns the display name of the Godot bridge class if the method signature matches
+            a known bridge catch site, or null if it's not a bridge method.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.ExceptionHandling.LoggerExceptionHandler">
+            <summary>
+            Uses FirstChanceException to capture the last exception per thread,
+            and native Godot Logger to detect when Godot's bridge catches one.
+            When the native logger detects C# error, we capture the cached exception.
+            </summary>
+            <remarks>
+            Note that, Godot doesn't log .NET exceptions when its debugger is active,
+            so this handler alone is not sufficient on desktop platforms during debugging.
+            That's why CoreClrExceptionHandler also exists - it captures exceptions even
+            with the debugger attached, but only on CoreCLR (PC/Mac).
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.ExceptionHandling.NativeThreadId">
+            <summary>
+            Cross-platform OS thread ID retrieval.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.Internal.CocoaDebugImagesProcessor">
+            <summary>
+            Attaches Mach-O debug images to events on iOS so NativeAOT stack frames symbolicate server-side.
+            </summary>
+            <remarks>
+            Frames arrive with <c>image_addr</c> set but no matching <c>debug_meta.images</c> entries,
+            leaving the symbolicator with nothing to bind to. This processor reads the images from
+            the in-process sentry-cocoa cache and appends them to the event.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.Internal.DefaultAttachmentsProcessor">
+            <summary>
+            Adds default attachments managed and created by native integrations (log, screenshot and view hierarchy)
+            to .NET events.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.Internal.GodotAssemblyReader">
+             <summary>
+             Provides assembly bytes to the Sentry .NET SDK for managed stack-trace symbolication.
+             </summary>
+             <remarks>
+             On Android, .NET assemblies live inside the application archive (possibly nested in a .pck) and have no on-disk path
+             the SDK can open. Without their bytes the SDK cannot build debug images, so the server reports every managed frame
+             as unknown_image. This reader is designed to fetch bytes via the native bridge, routed through Godot's FileAccess
+             so the engine's virtual FS handles packing and decompression.
+            
+             The SDK only reads two small segments per assembly (PE headers at the start and the debug directory near the end), so
+             each assembly is exposed as a seekable Stream rather than whole. Touched segments are cached per assembly, and repeat
+             captures are served from cache and do no further I/O.
+             </remarks>
+        </member>
+        <member name="M:Sentry.Godot.Internal.GodotAssemblyReader.TryReadAssembly(System.String)">
+            <summary>
+            Returns a PEReader over the named assembly, or null if it cannot be resolved.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.Internal.GodotAssemblyReader.AssemblyReadStream">
+            <summary>
+            Seekable stream over a managed assembly in Godot's virtual FS.
+            </summary>
+            <remarks>
+            Reads hit cached segments when possible, and misses go to the native file handle and the segment is stored so
+            later captures hit our cache.
+            The handle is opened lazily and closed on dispose.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.Internal.GodotAssemblyReader.AssemblyReadStream.#ctor(System.String,Sentry.Godot.Internal.GodotAssemblyReader.AssemblyReadState,System.IntPtr)">
+            <summary>
+            Seekable stream over a managed assembly in Godot's virtual FS.
+            </summary>
+            <remarks>
+            Reads hit cached segments when possible, and misses go to the native file handle and the segment is stored so
+            later captures hit our cache.
+            The handle is opened lazily and closed on dispose.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.Internal.GodotLog">
+            <summary>
+            Wrapper around native logging functions via P/Invoke.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.Internal.SentryGodotInitializer">
+            <summary>
+            Handles automatic initialization of the .NET Sentry SDK.
+            Called from [ModuleInitializer] in SentryAutoInit.cs, which is compiled into the user's assembly.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.Interop.GodotScopeObserver">
+            <summary>
+            Synchronizes scope changes to native layer.
+            </summary>
+            <remarks>
+            Local scope changes are NOT synced, which prevents them from leaking into the native current scope.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.Interop.NativeBridge">
+            <summary>
+            Handles native layer SDK operations via P/Invoke.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.MarshallStringMap(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},Sentry.Godot.Interop.NativeBridge.ManagedStringMapAction)">
+            <summary>
+            Marshals a dictionary into a stack-allocated interleaved buffer and passes the resulting struct to a native
+            function call. The map is only valid for the duration of the call (owned by managed code).
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.IsNativeAvailable">
+            <summary>
+            Checks whether the native interop library is loaded and exposes the expected symbol.
+            Returns false when running outside the Godot/GDExtension host, so initialization can be skipped.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.RegisterManagedFunctions">
+            <summary>
+            Registers managed functions that are called from native layer.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.ProcessNativeEventCallback(System.IntPtr)">
+            <remarks>
+            Called by native for each native/engine event.
+            Runs the options.Native.SetBeforeSend callback with a temporary event wrapper.
+            Returns 1 to keep the event, 0 to discard.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.ProcessNativeTransactionCallback(System.IntPtr)">
+            <remarks>
+            Called by native for each native transaction.
+            Runs the options.Native.SetBeforeSendTransaction callback with a temporary event wrapper.
+            Returns 1 to keep the transaction, 0 to discard.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.FetchDefaultAttachments(Sentry.Godot.SentryGodotOptions)">
+            <summary>
+            Adds default attachments resolved by the native layer after init() to the managed options.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.IsAndroid">
+            <remarks>
+            OperatingSystem.IsAndroid() returns false on Godot Android.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.OpenManagedAssembly(System.String)">
+            <summary>
+            Opens managed assembly by name from Godot's virtual filesystem as a seekable handle.
+            Returns null handle with zero length if the assembly was not found.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.ReadManagedAssembly(System.IntPtr,System.Int64,System.Span{System.Byte})">
+            <summary>
+            Reads bytes from an open assembly handle at specified offset into destination.
+            Returns the number of bytes read, which may be less than requested at EOF.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.CloseManagedAssembly(System.IntPtr)">
+            <summary>
+            Closes a managed assembly handle opened by <see cref="M:Sentry.Godot.Interop.NativeBridge.OpenManagedAssembly(System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.GetCocoaDebugImages(System.Collections.Generic.IReadOnlyCollection{System.Int64})">
+            <summary>
+            Resolves Mach-O debug images for the given image base addresses from the
+            Cocoa SDK's in-process cache.
+            Used to populate debug_meta.images for NativeAOT frames on iOS, which
+            sentry-dotnet would otherwise leave empty for our TFM-neutral build.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeBridge.csharp_interop_get_sdk_version">
+            <remarks>
+            Returns compile-time literal - don't free!
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.Interop.NativeLibResolver">
+            <summary>
+            Resolves the sentry-godot GDExtension library at runtime.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.Interop.NativeLibResolver.Resolve">
+            <summary>
+            Returns the GDExtension library handle for P/Invokes and the availability probe.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.SentryGodotOptions">
+            <summary>
+            Configures the Sentry SDK for Godot.
+            </summary>
+            <remarks>
+            Regular expressions in <see cref="P:Sentry.SentryOptions.TracePropagationTargets"/> sync to the native layer using only
+            their pattern. Constructor-supplied <see cref="T:System.Text.RegularExpressions.RegexOptions"/> are not preserved.
+            For case-insensitive matching in both layers, include <c>(?i)</c> in the pattern instead of using
+            <see cref="F:System.Text.RegularExpressions.RegexOptions.IgnoreCase"/>.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.Native">
+            <summary>
+            Configuration that applies to the native layer, including the before-send hook
+            for native events such as engine, GDExtension and GDScript errors.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.AttachLog">
+            <summary>
+            If enabled, the SDK will attach the Godot log file to the event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.AttachSceneTree">
+            <summary>
+            If enabled, the SDK captures scene tree hierarchy data with each event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.AttachScreenshot">
+            <summary>
+            If enabled, the SDK captures screenshots for events meeting or exceeding <see cref="P:Sentry.Godot.SentryGodotOptions.ScreenshotLevel"/>.
+            </summary>
+            <remarks>
+            This feature is experimental and may impact performance. Test before enabling in production.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.ScreenshotLevel">
+            <summary>
+            Minimum event level for which screenshots are captured.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.EnableAppHangTracking">
+            <summary>
+            If enabled, the SDK monitors the main thread and reports hang events
+            when it becomes unresponsive for longer than <see cref="P:Sentry.Godot.SentryGodotOptions.AppHangTimeout"/>.
+            </summary>
+            <remarks>
+            This feature applies to iOS and macOS only. On Android, <see cref="P:Sentry.Godot.SentryGodotOptions.Android"/> configures
+            ANR (Application Not Responding) detection instead.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.AppHangTimeout">
+            <summary>
+            Duration after which the application is considered to have hanged.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.GodotLogger">
+            <summary>
+            Configures the capture of Godot errors and log messages as Sentry events, breadcrumbs,
+            and logs. See <see cref="T:Sentry.Godot.SentryGodotLoggerOptions"/>.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.Android">
+            <summary>
+            Configures Android-specific options, such as ANR (Application Not Responding) detection.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryGodotOptions.ApplyNativeOptions">
+            <summary>
+            Reads resolved options from the native SentryOptions.
+            </summary>
+            <remarks>
+            Since the native SDK initializes before .NET, treat native options as single
+            source of truth for those options that are common to both.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentryGodotOptions.ApplyNativeOptionsDefaults">
+            <summary>
+            Applies default option values from the native layer, which may be overridden by the user callback.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryGodotOptions.ApplyTemplateSubstitutions">
+            <summary>
+            Applies template substitutions to options that may have been set by user callback.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.GodotLoggerEventMask">
+            <summary>
+            Bitfield mask for Godot logger events.
+            </summary>
+            <remarks>
+            Used to specify which Godot logger events are captured as Sentry events, breadcrumbs and logs.
+            </remarks>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.None">
+            <summary>No logger errors or messages will be captured.</summary>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.Error">
+            <summary>Native (C++) and engine errors, which may also originate from a script.</summary>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.Warning">
+            <summary>Warnings.</summary>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.Script">
+            <summary>Script errors.</summary>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.Shader">
+            <summary>Shader errors.</summary>
+        </member>
+        <member name="F:Sentry.Godot.GodotLoggerEventMask.Message">
+            <summary>Log messages such as <c>GD.Print()</c> statements.</summary>
+        </member>
+        <member name="T:Sentry.Godot.SentryGodotLoggerOptions">
+            <summary>
+            Contains configuration options that control how the SDK captures Godot errors and log messages
+            as Sentry events, breadcrumbs, and logs. Access this configuration through
+            <see cref="P:Sentry.Godot.SentryGodotOptions.GodotLogger"/>.
+            </summary>
+            <remarks>
+            This includes engine errors, GDScript and shader errors, GDExtension errors, <c>GD.PushError()</c>
+            and <c>GD.PushWarning()</c> statements, as well as log messages from <c>GD.Print()</c> and
+            similar functions.
+            These options control Godot-side error reporting, not .NET errors.
+            </remarks>
+            <seealso cref="T:Sentry.Godot.SentryGodotOptions"/>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.Enabled">
+            <summary>
+            If enabled, the SDK will capture logged errors as events, breadcrumbs and/or logs, as defined
+            by <see cref="P:Sentry.Godot.SentryGodotLoggerOptions.EventMask"/>, <see cref="P:Sentry.Godot.SentryGodotLoggerOptions.BreadcrumbMask"/> and <see cref="P:Sentry.Godot.SentryGodotLoggerOptions.LogMask"/>.
+            Crashes are always captured.
+            </summary>
+            <remarks>
+            This setting controls GDScript/engine error reporting, not .NET errors.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.IncludeSourceContext">
+            <summary>
+            If enabled, the SDK will include the surrounding source code of logged errors, if available
+            in the exported project.
+            </summary>
+            <remarks>
+            This setting controls GDScript error reporting, not .NET errors.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.IncludeVariables">
+            <summary>
+            If enabled, the SDK will include local variables from stack traces when capturing script errors.
+            This allows showing the values of variables at each frame in the call stack. Requires enabling
+            the <c>debug/settings/gdscript/always_track_local_variables</c> project setting.
+            </summary>
+            <remarks>
+            May impact performance, especially for applications with frequent errors or deep call stacks.
+            This setting controls GDScript error reporting, not .NET errors.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.EventMask">
+            <summary>
+            Specifies the Godot logger events that are automatically captured as Sentry events.
+            Accepts a single value or a bitwise combination of <see cref="T:Sentry.Godot.GodotLoggerEventMask"/> masks.
+            </summary>
+            <remarks>
+            <see cref="F:Sentry.Godot.GodotLoggerEventMask.Message"/> has no effect here. To capture log messages,
+            set it in <see cref="P:Sentry.Godot.SentryGodotLoggerOptions.LogMask"/> and/or <see cref="P:Sentry.Godot.SentryGodotLoggerOptions.BreadcrumbMask"/> instead.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.BreadcrumbMask">
+            <summary>
+            Specifies the Godot logger events that are automatically captured as Sentry breadcrumbs.
+            Accepts a single value or a bitwise combination of <see cref="T:Sentry.Godot.GodotLoggerEventMask"/> masks.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.LogMask">
+            <summary>
+            Specifies the Godot logger events that are automatically captured as Sentry logs.
+            Accepts a single value or a bitwise combination of <see cref="T:Sentry.Godot.GodotLoggerEventMask"/> masks.
+            Empty by default, so no events are captured as logs.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryGodotLoggerOptions.Limits">
+            <summary>
+            Defines throttling limits for the error logger. These limits are used to prevent the SDK
+            from sending too many non-critical and repeating error events. See <see cref="T:Sentry.Godot.SentryLoggerLimits"/>.
+            </summary>
+            <remarks>
+            This setting controls GDScript/engine error reporting, not .NET errors.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.SentryLoggerLimits">
+            <summary>
+            Specifies throttling limits for the error logger.
+            These limits govern the behavior of throttling and are used to prevent the SDK from sending
+            too many non-critical and repeating error events.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryLoggerLimits.EventsPerFrame">
+            <summary>
+            Specifies the maximum number of error events to send per processed frame. If exceeded,
+            no further errors will be captured until the next frame.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryLoggerLimits.RepeatedErrorWindow">
+            <summary>
+            Specifies the minimum time interval between two identical errors. If exceeded,
+            no further errors from the same line of code with the identical message will be
+            captured until the next interval. Set to zero to disable this limit.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryLoggerLimits.ThrottleEvents">
+            <summary>
+            Specifies the maximum number of events allowed within a sliding time window
+            of <see cref="P:Sentry.Godot.SentryLoggerLimits.ThrottleWindow"/>. If exceeded, errors will be captured as
+            breadcrumbs only until capacity is freed.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryLoggerLimits.ThrottleWindow">
+            <summary>
+            Specifies the time window for <see cref="P:Sentry.Godot.SentryLoggerLimits.ThrottleEvents"/>.
+            Set to zero to disable this limit.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.SentryAndroidOptions">
+            <summary>
+            Contains configuration options that apply only when the project runs on Android, such as ANR (Application Not
+            Responding) detection. Access this configuration through <see cref="P:Sentry.Godot.SentryGodotOptions.Android"/>.
+            </summary>
+            <seealso cref="T:Sentry.Godot.SentryGodotOptions"/>
+        </member>
+        <member name="P:Sentry.Godot.SentryAndroidOptions.EnableAnrDetection">
+            <summary>
+            Enables detection and reporting of ANR (Application Not Responding) errors. The SDK monitors the main thread
+            for unresponsiveness and reports an event when an ANR occurs.
+            </summary>
+            <remarks>
+            Android 11 and later use the system-based V2 implementation, while earlier versions use the watchdog-based V1
+            implementation. See <see cref="P:Sentry.Godot.SentryAndroidOptions.AnrTimeoutInterval"/> and <see cref="P:Sentry.Godot.SentryAndroidOptions.AttachAnrThreadDump"/> for options specific
+            to each implementation. On Apple platforms, <see cref="P:Sentry.Godot.SentryGodotOptions.EnableAppHangTracking"/> configures the
+            equivalent app hang detection.
+            To learn more, visit <see href="https://docs.sentry.io/platforms/android/configuration/app-not-respond/">Application Not Responding documentation</see>.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryAndroidOptions.AnrTimeoutInterval">
+            <summary>
+            Specifies how long the main thread must stay blocked before the SDK reports an ANR.
+            </summary>
+            <remarks>
+            Applies only when <see cref="P:Sentry.Godot.SentryAndroidOptions.EnableAnrDetection"/> is enabled, and only to the V1 implementation used on Android
+            versions before 11. On Android 11 and later, the operating system determines when the application stops responding, so
+            this value has no effect.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryAndroidOptions.AttachAnrThreadDump">
+            <summary>
+            Attaches the operating system's thread dump to the ANR event as a plain-text attachment, adding detail for
+            investigating where the application became unresponsive.
+            </summary>
+            <remarks>
+            Applies only when <see cref="P:Sentry.Godot.SentryAndroidOptions.EnableAnrDetection"/> is enabled, and only to the V2 implementation used on Android
+            11 and later.
+            </remarks>
+        </member>
+        <member name="T:Sentry.Godot.SentryNativeEvent">
+            <summary>
+            Represents a native Godot event passed to a callback registered through
+            <see cref="T:Sentry.Godot.SentryNativeOptions"/>.
+            </summary>
+            <remarks>
+            This instance is valid only while the callback is running and must not be retained.
+            Each member reads from or writes to the live native event across the interop boundary,
+            so only the fields a callback touches cross it.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Id">
+            <summary>
+            The event's unique identifier.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Platform">
+            <summary>
+            The platform that produced the event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Message">
+            <summary>
+            The message that describes the event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Level">
+            <summary>
+            The severity of the event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Logger">
+            <summary>
+            The name of the logger that captured the event.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Release">
+            <summary>
+            The release version of the application.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Distribution">
+            <summary>
+            The distribution of the application.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.Environment">
+            <summary>
+            The environment the event was captured in.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeEvent.GetTag(System.String)">
+            <summary>
+            Returns the value of the tag with the given key, or null if the tag is not set.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeEvent.SetTag(System.String,System.String)">
+            <summary>
+            Sets the tag with the given key to the given value.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeEvent.UnsetTag(System.String)">
+            <summary>
+            Removes the tag with the given key.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryNativeEvent.ExceptionCount">
+            <summary>
+            The number of exceptions attached to the event.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeEvent.GetExceptionValue(System.Int32)">
+            <summary>
+            Returns the message of the exception at the given index, or null if the index is out of range.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeEvent.SetExceptionValue(System.Int32,System.String)">
+            <summary>
+            Sets the message of the exception at the given index.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.SentryNativeOptions">
+            <summary>
+            Contains options for the native layer, accessed through
+            <see cref="P:Sentry.Godot.SentryGodotOptions.Native"/>.
+            </summary>
+            <remarks>
+            The native layer handles events that originate outside .NET, such as GDScript and engine errors.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeOptions.SetBeforeSend(System.Func{Sentry.Godot.SentryNativeEvent,Sentry.Godot.SentryNativeEvent})">
+            <summary>
+            Sets the callback invoked before a native event is sent, allowing you to inspect, modify, or discard it.
+            </summary>
+            <remarks>
+            Native events include GDScript and engine errors. The callback receives a
+            <see cref="T:Sentry.Godot.SentryNativeEvent"/>; return it to send the event, or return null to discard it.
+            Native crash events are not passed to this callback.
+            Managed (.NET) events are configured through
+            <see cref="M:Sentry.SentryOptions.SetBeforeSend(System.Func{Sentry.SentryEvent,Sentry.SentryHint,Sentry.SentryEvent})"/> instead.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentryNativeOptions.SetBeforeSendTransaction(System.Func{Sentry.Godot.SentryNativeEvent,Sentry.Godot.SentryNativeEvent})">
+            <summary>
+            Sets the callback invoked before a native transaction is sent, allowing you to inspect, modify, or discard it.
+            </summary>
+            <remarks>
+            Native transactions include performance events created in the native layer (such as from GDScript). The callback
+            receives a <see cref="T:Sentry.Godot.SentryNativeEvent"/>; return it to send the transaction, or return null to discard it.
+            Transactions support common event properties such as release, distribution, environment, and tags.
+            Error-specific properties such as message, level, logger, and exceptions are not available. Managed (.NET)
+            transactions are configured through
+            <see cref="M:Sentry.SentryOptions.SetBeforeSendTransaction(System.Func{Sentry.SentryTransaction,Sentry.SentryTransaction})"/> instead.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.Init(System.Action{Sentry.Godot.SentryGodotOptions})">
+            <summary>
+            Initializes the .NET SDK with an optional configuration callback.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.InitFromNative">
+            <summary>
+            Initializes the .NET SDK using resolved options from the native layer.
+            </summary>
+            <remarks>
+            Always called by the native SDK after initialization, but should only take
+            effect when the native layer is auto-initialized or initialized from GDScript.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureAssemblyReader(Sentry.Godot.SentryGodotOptions)">
+            <summary>
+            On Android, lets the SDK read managed assembly bytes from the packed project data.
+            </summary>
+            <remarks>
+            Godot's Mono runtime on Android loads managed assemblies from the packed
+            project data, so they have no on-disk path and the SDK cannot build debug
+            images for managed stack frames. The reader resolves the bytes through the
+            native layer instead. Desktop builds keep the SDK's default disk reader,
+            which finds the assemblies as loose files next to the executable.
+            </remarks>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureCocoaDebugImagesOnIOS(Sentry.Godot.SentryGodotOptions)">
+            <summary>
+            On iOS, registers a processor that attaches Mach-O debug images from the in-process
+            Cocoa SDK so NativeAOT stack frames can be symbolicated server-side.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.Close">
+            <summary>
+            Flushes the events and disables the SDK.
+            </summary>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureEvent(Sentry.SentryEvent,System.Action{Sentry.Scope})">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureEvent(Sentry.SentryEvent,System.Action{Sentry.Scope})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureEvent(Sentry.SentryEvent,Sentry.SentryHint,System.Action{Sentry.Scope})">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureEvent(Sentry.SentryEvent,Sentry.SentryHint,System.Action{Sentry.Scope})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureException(System.Exception,System.Action{Sentry.Scope})">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureException(System.Exception,System.Action{Sentry.Scope})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureException(System.Exception,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureException(System.Exception,System.Boolean,System.Boolean)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureException(System.Exception,System.Boolean,System.Boolean,System.Action{Sentry.Scope})">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureException(System.Exception,System.Boolean,System.Boolean,System.Action{Sentry.Scope})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,System.Action{Sentry.Scope},Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.HubExtensions.CaptureFeedback(Sentry.IHub,Sentry.SentryFeedback,System.Action{Sentry.Scope},Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,Sentry.CaptureFeedbackResult@,System.Action{Sentry.Scope},Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.IHub.CaptureFeedback(Sentry.SentryFeedback,Sentry.CaptureFeedbackResult@,System.Action{Sentry.Scope},Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureMessage(System.String,System.Action{Sentry.Scope},Sentry.SentryLevel)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureMessage(System.String,System.Action{Sentry.Scope},Sentry.SentryLevel)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.AddBreadcrumb(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},Sentry.BreadcrumbLevel)">
+            <inheritdoc cref="M:Sentry.SentrySdk.AddBreadcrumb(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},Sentry.BreadcrumbLevel)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.AddBreadcrumb(Sentry.Infrastructure.ISystemClock,System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},Sentry.BreadcrumbLevel)">
+            <inheritdoc cref="M:Sentry.SentrySdk.AddBreadcrumb(Sentry.Infrastructure.ISystemClock,System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.String},Sentry.BreadcrumbLevel)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.AddBreadcrumb(Sentry.Breadcrumb,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.AddBreadcrumb(Sentry.Breadcrumb,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.BindClient(Sentry.ISentryClient)">
+            <inheritdoc cref="M:Sentry.SentrySdk.BindClient(Sentry.ISentryClient)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.BindException(System.Exception,Sentry.ISpan)">
+            <inheritdoc cref="M:Sentry.SentrySdk.BindException(System.Exception,Sentry.ISpan)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureCheckIn(System.String,Sentry.CheckInStatus,System.Nullable{Sentry.SentryId},System.Nullable{System.TimeSpan},Sentry.Scope,System.Action{Sentry.SentryMonitorOptions})">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureCheckIn(System.String,Sentry.CheckInStatus,System.Nullable{Sentry.SentryId},System.Nullable{System.TimeSpan},Sentry.Scope,System.Action{Sentry.SentryMonitorOptions})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureEnvelope(Sentry.Protocol.Envelopes.Envelope)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureEnvelope(Sentry.Protocol.Envelopes.Envelope)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureEvent(Sentry.SentryEvent,Sentry.Scope,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureEvent(Sentry.SentryEvent,Sentry.Scope,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureException(System.Exception)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureException(System.Exception)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,Sentry.Scope,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,Sentry.Scope,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,Sentry.CaptureFeedbackResult@,Sentry.Scope,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureFeedback(Sentry.SentryFeedback,Sentry.CaptureFeedbackResult@,Sentry.Scope,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureFeedback(System.String,System.String,System.String,System.String,System.String,System.Nullable{Sentry.SentryId},Sentry.Scope,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureFeedback(System.String,System.String,System.String,System.String,System.String,System.Nullable{Sentry.SentryId},Sentry.Scope,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureMessage(System.String,Sentry.SentryLevel)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureMessage(System.String,Sentry.SentryLevel)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureSession(Sentry.SessionUpdate)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureSession(Sentry.SessionUpdate)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureTransaction(Sentry.SentryTransaction)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureTransaction(Sentry.SentryTransaction)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CaptureTransaction(Sentry.SentryTransaction,Sentry.Scope,Sentry.SentryHint)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CaptureTransaction(Sentry.SentryTransaction,Sentry.Scope,Sentry.SentryHint)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.CauseCrash(Sentry.CrashType)">
+            <inheritdoc cref="M:Sentry.SentrySdk.CauseCrash(Sentry.CrashType)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureScope(System.Action{Sentry.Scope})">
+            <inheritdoc cref="M:Sentry.SentrySdk.ConfigureScope(System.Action{Sentry.Scope})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureScope``1(System.Action{Sentry.Scope,``0},``0)">
+            <inheritdoc cref="M:Sentry.SentrySdk.ConfigureScope``1(System.Action{Sentry.Scope,``0},``0)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureScopeAsync(System.Func{Sentry.Scope,System.Threading.Tasks.Task})">
+            <inheritdoc cref="M:Sentry.SentrySdk.ConfigureScopeAsync(System.Func{Sentry.Scope,System.Threading.Tasks.Task})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ConfigureScopeAsync``1(System.Func{Sentry.Scope,``0,System.Threading.Tasks.Task},``0)">
+            <inheritdoc cref="M:Sentry.SentrySdk.ConfigureScopeAsync``1(System.Func{Sentry.Scope,``0,System.Threading.Tasks.Task},``0)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ContinueTrace(System.String,System.String,System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.ContinueTrace(System.String,System.String,System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ContinueTrace(Sentry.SentryTraceHeader,Sentry.BaggageHeader,System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.ContinueTrace(Sentry.SentryTraceHeader,Sentry.BaggageHeader,System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.EndSession(Sentry.SessionEndStatus)">
+            <inheritdoc cref="M:Sentry.SentrySdk.EndSession(Sentry.SessionEndStatus)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.Flush">
+            <inheritdoc cref="M:Sentry.SentrySdk.Flush"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.Flush(System.TimeSpan)">
+            <inheritdoc cref="M:Sentry.SentrySdk.Flush(System.TimeSpan)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.FlushAsync">
+            <inheritdoc cref="M:Sentry.SentrySdk.FlushAsync"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.FlushAsync(System.TimeSpan)">
+            <inheritdoc cref="M:Sentry.SentrySdk.FlushAsync(System.TimeSpan)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.GetBaggage">
+            <inheritdoc cref="M:Sentry.SentrySdk.GetBaggage"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.GetSpan">
+            <inheritdoc cref="M:Sentry.SentrySdk.GetSpan"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.GetTraceHeader">
+            <inheritdoc cref="M:Sentry.SentrySdk.GetTraceHeader"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.GetTraceparentHeader">
+            <inheritdoc cref="M:Sentry.SentrySdk.GetTraceparentHeader"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.GetTransaction">
+            <inheritdoc cref="M:Sentry.SentrySdk.GetTransaction"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.PauseSession">
+            <inheritdoc cref="M:Sentry.SentrySdk.PauseSession"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.PushScope``1(``0)">
+            <inheritdoc cref="M:Sentry.SentrySdk.PushScope``1(``0)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.PushScope">
+            <inheritdoc cref="M:Sentry.SentrySdk.PushScope"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.RecordTransaction(System.String,System.String,System.DateTimeOffset,System.TimeSpan,System.Nullable{Sentry.SentryId},System.Nullable{Sentry.SpanId},System.Nullable{Sentry.SpanId},System.Action{Sentry.ITransactionRecorder})">
+            <inheritdoc cref="M:Sentry.SentrySdk.RecordTransaction(System.String,System.String,System.DateTimeOffset,System.TimeSpan,System.Nullable{Sentry.SentryId},System.Nullable{Sentry.SpanId},System.Nullable{Sentry.SpanId},System.Action{Sentry.ITransactionRecorder})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.ResumeSession">
+            <inheritdoc cref="M:Sentry.SentrySdk.ResumeSession"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.SetTag(System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.SetTag(System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartSession">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartSession"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartSpan(System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartSpan(System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartTransaction(Sentry.ITransactionContext,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartTransaction(Sentry.ITransactionContext,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartTransaction(Sentry.ITransactionContext)">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartTransaction(Sentry.ITransactionContext)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartTransaction(System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartTransaction(System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartTransaction(System.String,System.String,System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartTransaction(System.String,System.String,System.String)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.StartTransaction(System.String,System.String,Sentry.SentryTraceHeader)">
+            <inheritdoc cref="M:Sentry.SentrySdk.StartTransaction(System.String,System.String,Sentry.SentryTraceHeader)"/>
+        </member>
+        <member name="M:Sentry.Godot.SentrySdk.UnsetTag(System.String)">
+            <inheritdoc cref="M:Sentry.SentrySdk.UnsetTag(System.String)"/>
+        </member>
+        <member name="P:Sentry.Godot.SentrySdk.IsEnabled">
+            <inheritdoc cref="P:Sentry.SentrySdk.IsEnabled"/>
+        </member>
+        <member name="P:Sentry.Godot.SentrySdk.IsSessionActive">
+            <inheritdoc cref="P:Sentry.SentrySdk.IsSessionActive"/>
+        </member>
+        <member name="P:Sentry.Godot.SentrySdk.LastEventId">
+            <inheritdoc cref="P:Sentry.SentrySdk.LastEventId"/>
+        </member>
+        <member name="P:Sentry.Godot.SentrySdk.Logger">
+            <inheritdoc cref="P:Sentry.SentrySdk.Logger"/>
+        </member>
+        <member name="P:Sentry.Godot.SentrySdk.Metrics">
+            <inheritdoc cref="P:Sentry.SentrySdk.Metrics"/>
+        </member>
+    </members>
+</doc>

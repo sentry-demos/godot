@@ -15,6 +15,9 @@ jobs:
   upload-addons:
     runs-on: windows-latest
     timeout-minutes: 10
+    env:
+      SENTRY_VERSION: 2.3.0+8ec9083
+      SENTRY_SYMBOLS_SHA: 71ba479dd2cfd743b3e5d2d60f4196c980a7797acdfac9babf6aeecbcdec8471
 
     steps:
       - name: Checkout repository
@@ -23,6 +26,14 @@ jobs:
       - name: Install sentry-cli
         run: pip install sentry-cli
 
+      - name: Download Sentry SDK debug symbols
+        shell: bash
+        run: |
+          symbols_archive="$RUNNER_TEMP/sentry-symbols.zip"
+          curl --fail --location --retry 3 --output "$symbols_archive" \
+            "https://github.com/getsentry/sentry-godot/releases/download/${SENTRY_VERSION%%+*}/sentry-godot-debug-symbols-${SENTRY_VERSION}.zip"
+          printf '%s  %s\n' "$SENTRY_SYMBOLS_SHA" "$symbols_archive" | sha256sum --check --strict
+
       - name: Upload addon debug information files
         shell: bash
         env:
@@ -30,7 +41,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          sentry-cli debug-files upload --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" addons/
+          sentry-cli debug-files upload --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" addons/ "$RUNNER_TEMP/sentry-symbols.zip"
 
   upload-godot:
     name: Upload Godot (${{ matrix.target }})
