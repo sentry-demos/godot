@@ -4,32 +4,77 @@ on:
   push:
     branches:
       - "main"
-      - "godot-4.5"
     paths:
       - "addons/**"
+      - ".github/workflows/upload-symbols.yml"
+      - "tools/download-godot.sh"
 
   workflow_dispatch: # allows manual runs
 
 jobs:
-  upload-symbols:
+  upload-addons:
     runs-on: windows-latest
     timeout-minutes: 10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: godot-4.5
-          fetch-depth: 1
 
       - name: Install sentry-cli
         run: pip install sentry-cli
 
-      - name: Upload debug information files
+      - name: Upload addon debug information files
         shell: bash
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          find addons/ \( -name "*.pdb" -o -name "*.dll" -o -name "*.src.zip" \) -print0 | xargs -0 sentry-cli debug-files upload --org ${SENTRY_ORG} --project ${SENTRY_PROJECT}
+          sentry-cli debug-files upload --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" addons/
+
+  upload-godot:
+    name: Upload Godot (${{ matrix.target }})
+    runs-on: windows-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        include:
+          - target: editor
+            binary_sha: 171b16c3d7c12df57b85ad7cb7f15160b027d62df902258f6f997887595138a2
+            symbols_sha: 7a8d799dfcc64c6dddd39f17450df043379c6c995983743cb08af696e0e02113
+          - target: template_release
+            binary_sha: 6431e32fb3033cf574d5c95d4949d250da6a7681ef51db6a350913470a5e9b33
+            symbols_sha: 50fb89e1700e5abb290cc1e29a9d2637c2d6450bf466732053a10af9b3caeb5b
+    env:
+      GODOT_RELEASE: godot-4.5.2-stable-sentry.1
+      GODOT_TARGET: ${{ matrix.target }}
+      GODOT_BINARY_SHA: ${{ matrix.binary_sha }}
+      GODOT_SYMBOLS_SHA: ${{ matrix.symbols_sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install sentry-cli
+        run: pip install sentry-cli
+
+      - name: Download Godot binaries and symbols
+        shell: bash
+        run: |
+          bash tools/download-godot.sh \
+            --release "$GODOT_RELEASE" --platform windows --arch x86_64 \
+            --target "$GODOT_TARGET" --output-dir godot/ \
+            --sha "$GODOT_BINARY_SHA"
+          bash tools/download-godot.sh \
+            --release "$GODOT_RELEASE" --platform windows --arch x86_64 \
+            --target "$GODOT_TARGET" --symbols --output-dir godot/ \
+            --sha "$GODOT_SYMBOLS_SHA"
+
+      - name: Upload Godot debug information files
+        shell: bash
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          sentry-cli debug-files upload --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" godot/

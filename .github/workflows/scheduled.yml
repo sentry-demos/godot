@@ -13,19 +13,33 @@ jobs:
   run-demo:
     runs-on: windows-latest
     timeout-minutes: 60
+    env:
+      GODOT_VERSION: 4.5.2-stable
+      GODOT_BUILD_NAME: sentry.1
+      GODOT_EDITOR_SHA: 171b16c3d7c12df57b85ad7cb7f15160b027d62df902258f6f997887595138a2
+      GODOT_TEMPLATE_SHA: 6431e32fb3033cf574d5c95d4949d250da6a7681ef51db6a350913470a5e9b33
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: godot-4.5
 
-      - name: Unzip Godot build
+      - name: Download Godot editor
         shell: bash
         run: |
-          cd tools
-          unzip godot.windows.template_release.x86_64.zip
-          unzip godot.windows.editor.x86_64.zip
+          bash tools/download-godot.sh \
+            --release "godot-${GODOT_VERSION}-${GODOT_BUILD_NAME}" \
+            --platform windows --arch x86_64 \
+            --target editor --sha "$GODOT_EDITOR_SHA" \
+            --output-dir tools --extract
+
+      - name: Download Godot release template
+        shell: bash
+        run: |
+          bash tools/download-godot.sh \
+            --release "godot-${GODOT_VERSION}-${GODOT_BUILD_NAME}" \
+            --platform windows --arch x86_64 \
+            --target template_release --sha "$GODOT_TEMPLATE_SHA" \
+            --output-dir tools --extract
 
       - name: Cache SwiftShader
         uses: actions/cache@v4
@@ -52,10 +66,10 @@ jobs:
 
       - name: Import project
         shell: bash
-        run: ./tools/godot.windows.editor.x86_64.exe --headless --editor --import --path . || true
+        run: ./tools/Godot_v${GODOT_VERSION}_${GODOT_BUILD_NAME}_editor.windows.x86_64.exe --headless --editor --import --path . || true
 
       - name: Run demo
         shell: bash
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: ./tools/godot.windows.template_release.x86_64.exe --path . --automate --dsn=${SENTRY_DSN} || true
+        run: ./tools/windows_release_x86_64.exe --path . --automate --dsn=${SENTRY_DSN} || true
