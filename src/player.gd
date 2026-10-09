@@ -49,7 +49,9 @@ func _physics_process(delta):
 
 
 func jump():
-	SentrySDK.add_breadcrumb("Jumping!", "Note")
+	var breadcrumb: SentryBreadcrumb = SentryBreadcrumb.create("Jumping!")
+	breadcrumb.category = "Note"
+	SentrySDK.add_breadcrumb(breadcrumb)
 	velocity.y = JUMP_VELOCITY
 	# Show jump skid.
 	var skid = Global.instance_scene_on_main(JumpSkid, global_position)

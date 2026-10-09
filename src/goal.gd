@@ -9,7 +9,9 @@ extends Area2D
 func _play_victory_animation():
 	# Results in error since "victory" animation doesn't exist.
 	var goal_name: String = self.name
-	SentrySDK.add_breadcrumb("Reached: " + goal_name, "Milestone")
+	var breadcrumb: SentryBreadcrumb = SentryBreadcrumb.create("Reached: " + goal_name)
+	breadcrumb.category = "Milestone"
+	SentrySDK.add_breadcrumb(breadcrumb)
 	animation_player.play(dance_victory_animation)
 
 
