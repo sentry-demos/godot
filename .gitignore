@@ -3,6 +3,21 @@
 
 # Godot-specific ignores
 .import/
+export_presets.cfg
+
+# GDExtensions
+.cache
+.sconsign*.dblite
+compile_commands.json
+
+# Tools
+/godot/
+/tools/Godot_v*
+/tools/linux_*
+/tools/windows_*.exe
+/tools/Godot.app/
+/tools/macos_template.app/
+/tools/*.pdb
 
 # Imported translations (automatically generated from CSV files)
 *.translation

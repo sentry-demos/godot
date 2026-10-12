@@ -1,0 +1,24 @@
+[configuration]
+
+entry_symbol = "gamelogic_library_init"
+compatibility_minimum = 4.5
+reloadable = true
+
+[libraries]
+
+macos.debug = "./bin/libgamelogic.macos.debug.universal.dylib"
+macos.release = "./bin/libgamelogic.macos.release.universal.dylib"
+windows.debug.x86_64 = "./bin/gamelogic.windows.debug.x86_64.dll"
+windows.release.x86_64 = "./bin/gamelogic.windows.release.x86_64.dll"
+linux.debug.x86_64 = "./bin/libgamelogic.linux.debug.x86_64.so"
+linux.release.x86_64 = "./bin/libgamelogic.linux.release.x86_64.so"
+linux.debug.arm64 = "./bin/libgamelogic.linux.debug.arm64.so"
+linux.release.arm64 = "./bin/libgamelogic.linux.release.arm64.so"
+linux.debug.rv64 = "./bin/libgamelogic.linux.debug.rv64.so"
+linux.release.rv64 = "./bin/libgamelogic.linux.release.rv64.so"
+web.debug.wasm32 = "./bin/libgamelogic.web.debug.wasm32.wasm"
+web.release.wasm32 = "./bin/libgamelogic.web.release.wasm32.wasm"
+android.debug.arm64 = "./bin/libgamelogic.android.debug.arm64.so"
+android.release.arm64 = "./bin/libgamelogic.android.release.arm64.so"
+ios.debug = "./bin/libgamelogic.ios.debug.universal.dylib"
+ios.release = "./bin/libgamelogic.ios.release.universal.dylib"

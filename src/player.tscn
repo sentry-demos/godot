@@ -64,5 +64,3 @@ animation = &"run"
 visible = false
 position = Vector2(2.08165e-12, -17)
 shape = SubResource("RectangleShape2D_yfsbm")
-
-[connection signal="area_entered" from="GoalDetectorArea" to="." method="_on_goal_detector_area_area_entered"]
