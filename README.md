@@ -1,6 +1,8 @@
 # Sentry Demo for Godot Engine
 
-A sample Godot game called "Sentry Jump". The updated demo project lives in the `godot-4.5` branch. The new version utilizes upcoming Godot 4.5 features that introduce Logger interface and allow script stack traces with local/member variables. It requires [Godot 4.5-dev4](https://godotengine.org/article/dev-snapshot-godot-4-5-dev-4/) or newer. The updated demo can also be played automatically if launched with `--automate` argument. The `tools` directory hosts precompiled Godot builds that can be used to edit or run the demo project.
+A sample Godot game called "Sentry Jump", using [Godot 4.5.2-stable](https://godotengine.org/download/archive/4.5.2-stable/) and Sentry SDK 2.3.0. It demonstrates runtime errors and native crashes, with script stack traces, local variables, and breadcrumbs. The demo can be played automatically with `--automate`.
+
+The Godot builds and debug symbols used by CI are available in the [Sentry Godot 4.5.2 release](https://github.com/getsentry/godot-builds/releases/tag/godot-4.5.2-stable-sentry.1). Use these builds to reproduce CI or symbolicate Godot engine frames. The [download script](tools/download-godot.sh) downloads a chosen build or symbol archive and verifies its SHA-256 checksum.
 
 ![Screenshot](.github/screenshot.png)
 
@@ -10,10 +12,9 @@ If you're new to Godot, follow these simple steps to run the demo:
 
 ### Prerequisites
 
-- Download and install [Godot 4.5-dev4](https://godotengine.org/article/dev-snapshot-godot-4-5-dev-4/#downloads) or newer for your operating system
-- Extract the Godot executable (Godot.app) to a location on your computer
+- Download and install [Godot 4.5.2-stable](https://godotengine.org/download/archive/4.5.2-stable/) for your operating system
+- Extract the Godot executable (`Godot.app` on macOS) to a location on your computer
 - Clone this demo repo locally (`git clone git@github.com:sentry-demos/godot.git`)
-- `cd` into the cloned repo and check out the `godot-4.5` branch. (⚠️ for now, that branch holds the current version of the demo. remember to do this!)
 
 ### Step 1: Open Godot
 
@@ -40,7 +41,7 @@ If you're new to Godot, follow these simple steps to run the demo:
 
 ### Step 4: Run the Game
 
-1. In the Godot editor, you'll see various panels and a 3D viewport
+1. In the Godot editor, you'll see various panels and a 2D viewport
 2. Look for the **Play button** (▶️) in the top-right corner of the editor
 3. Click the **Play button** to start the game
 
@@ -77,7 +78,7 @@ If the player goes off the platform and falls down, they reach the limits of the
 
 ### Troubleshooting
 
-- If you get import errors, ensure you're using Godot 4.5-dev4 or newer
+- If you get import errors, ensure you're using Godot 4.5.2-stable
 - Make sure you're selecting the folder that contains `project.godot`, not a subfolder
 - The game window may appear behind the editor - check your taskbar/dock
 
