@@ -1,6 +1,11 @@
 extends Node
 
 
+signal scene_resetting
+signal goal_reached
+signal player_jumped
+
+
 func instance_scene_on_main(scene: PackedScene, position: Vector2):
 	var main = get_tree().current_scene
 	var instance = scene.instantiate()
@@ -11,6 +16,7 @@ func instance_scene_on_main(scene: PackedScene, position: Vector2):
 
 func reset_scene():
 	print("Reloading current scene.")
+	scene_resetting.emit()
 	get_tree().call_group("instanced", "queue_free")
 	get_tree().reload_current_scene()
 

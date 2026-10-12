@@ -17,3 +17,4 @@ func _play_victory_animation():
 
 func _on_body_entered(_player: CharacterBody2D):
 	_play_victory_animation()
+	Global.goal_reached.emit()
