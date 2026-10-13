@@ -18,4 +18,6 @@ src/gen/
 *.os
 *.pyc
 *.so
+*.so.debug
+*.so*.src.zip
 *.obj
