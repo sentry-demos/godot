@@ -27,6 +27,7 @@ Global="*res://src/global.gd"
 
 settings/gdscript/always_track_call_stacks=true
 settings/gdscript/always_track_local_variables=true
+gdscript/warnings/unused_signal=0
 
 [display]
 
@@ -63,12 +64,11 @@ environment/defaults/default_clear_color=Color(1, 1, 1, 1)
 schema_version=5
 options/auto_init=false
 options/dsn="https://d9f0839b4ad9d34b32a772c8777a2738@o447951.ingest.us.sentry.io/4509325786021888"
-options/debug_printing=1
-experimental/attach_screenshot=true
-options/attach_scene_tree=true
-options/attach_log=true
 options/environment="production"
-experimental/screenshot_level=3
+options/debug_printing=1
+options/attach_scene_tree=true
+options/tracing/traces_sample_rate=1.0
 godot_logger/include_variables=true
-godot_logger/enabled=true
-godot_logger/include_source_context=true
+godot_logger/logs=143
+experimental/attach_screenshot=true
+experimental/screenshot_level=3

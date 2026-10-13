@@ -53,6 +53,7 @@ func jump():
 	breadcrumb.category = "Note"
 	SentrySDK.add_breadcrumb(breadcrumb)
 	velocity.y = JUMP_VELOCITY
+	Global.player_jumped.emit()
 	# Show jump skid.
 	var skid = Global.instance_scene_on_main(JumpSkid, global_position)
 	skid.flip_h = sprite.flip_h
