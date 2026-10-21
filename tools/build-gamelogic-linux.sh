@@ -8,11 +8,13 @@ main() {
     cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
     git submodule update --init --recursive -- addons/gamelogic/src/godot-cpp
 
-    rm -f addons/gamelogic/bin/libgamelogic.linux.{debug,release}.x86_64.so
+    rm -f addons/gamelogic/bin/libgamelogic.linux.{debug,release}.x86_64.so{,.debug,.src.zip}
 
     echo "Building..."
-    scons -j"$(nproc)" platform=linux arch=x86_64 target=template_release debug_symbols=yes
-    scons -j"$(nproc)" platform=linux arch=x86_64 target=editor debug_symbols=yes
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=template_release debug_symbols=yes --clean
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=template_release debug_symbols=yes
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=editor debug_symbols=yes --clean
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=editor debug_symbols=yes
 
     cd addons/gamelogic/bin
     local target binary
@@ -25,6 +27,7 @@ main() {
 
         echo "Creating source bundle for $binary..."
         sentry-cli debug-files bundle-sources "$binary.debug"
+        test -s "$binary.src.zip"
     done
 }
 
