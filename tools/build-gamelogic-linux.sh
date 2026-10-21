@@ -11,7 +11,9 @@ main() {
     rm -f addons/gamelogic/bin/libgamelogic.linux.{debug,release}.x86_64.so{,.debug,.src.zip}
 
     echo "Building..."
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=template_release debug_symbols=yes --clean
     scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=template_release debug_symbols=yes
+    scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=editor debug_symbols=yes --clean
     scons -j"$(nproc)" platform=linux arch=x86_64 api_version=4.5 target=editor debug_symbols=yes
 
     cd addons/gamelogic/bin

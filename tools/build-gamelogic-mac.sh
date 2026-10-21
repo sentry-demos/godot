@@ -13,7 +13,9 @@ main() {
     rm -rf addons/gamelogic/bin/libgamelogic.macos.{debug,release}.universal.dylib.dSYM
 
     echo "Building..."
+    scons platform=macos arch=universal api_version=4.5 target=template_release debug_symbols=yes --clean
     scons platform=macos arch=universal api_version=4.5 target=template_release debug_symbols=yes
+    scons platform=macos arch=universal api_version=4.5 target=editor debug_symbols=yes --clean
     scons platform=macos arch=universal api_version=4.5 target=editor debug_symbols=yes
 
     cd addons/gamelogic/bin
