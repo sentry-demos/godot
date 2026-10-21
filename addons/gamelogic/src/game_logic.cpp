@@ -5,8 +5,8 @@ GameLogic *GameLogic::singleton = nullptr;
 void GameLogic::enter_crash_zone() {
 	// Executing the following code crashes the game
 	print_line("Entering crash zone...");
-	char *chr = (char *)1;
-	print_line(chr);
+	volatile int *ptr = nullptr;
+	*ptr = 0;
 }
 
 void GameLogic::_bind_methods() {
