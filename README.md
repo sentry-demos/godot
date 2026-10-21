@@ -1,6 +1,6 @@
 # Sentry Demo for Godot Engine
 
-A sample Godot game called "Sentry Jump", using [Godot 4.5.2-stable](https://godotengine.org/download/archive/4.5.2-stable/) and Sentry SDK 2.3.0. It demonstrates runtime errors and native crashes, with script stack traces, local variables, and breadcrumbs. The demo can be played automatically with `--automate`.
+A sample Godot game called "Sentry Jump", using [Godot 4.5.2-stable](https://godotengine.org/download/archive/4.5.2-stable/) and Sentry SDK 2.4.0. It demonstrates runtime errors and native crashes, with script stack traces, local variables, and breadcrumbs. The demo can be played automatically with `--automate`.
 
 The Godot builds and debug symbols used by CI are available in the [Sentry Godot 4.5.2 release](https://github.com/getsentry/godot-builds/releases/tag/godot-4.5.2-stable-sentry.1). Use these builds to reproduce CI or symbolicate Godot engine frames. The [download script](tools/download-godot.sh) downloads a chosen build or symbol archive and verifies its SHA-256 checksum.
 
