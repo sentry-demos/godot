@@ -16,8 +16,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     env:
-      SENTRY_VERSION: 2.3.0+8ec9083
-      SENTRY_SYMBOLS_SHA: 71ba479dd2cfd743b3e5d2d60f4196c980a7797acdfac9babf6aeecbcdec8471
+      SENTRY_VERSION: 2.4.0+24732d3
+      SENTRY_SYMBOLS_SHA: 7de0704ff1f145f1a2bef0963c5db299a6098fd84914d1cbc966fa02f41c6fbc
 
     steps:
       - name: Checkout repository

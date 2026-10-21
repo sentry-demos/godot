@@ -312,6 +312,11 @@
             Configures Android-specific options, such as ANR (Application Not Responding) detection.
             </summary>
         </member>
+        <member name="P:Sentry.Godot.SentryGodotOptions.AutoMetrics">
+            <summary>
+            Configures automatic collection of frame, rendering, and memory metrics.
+            </summary>
+        </member>
         <member name="M:Sentry.Godot.SentryGodotOptions.ApplyNativeOptions">
             <summary>
             Reads resolved options from the native SentryOptions.
@@ -329,6 +334,77 @@
         <member name="M:Sentry.Godot.SentryGodotOptions.ApplyTemplateSubstitutions">
             <summary>
             Applies template substitutions to options that may have been set by user callback.
+            </summary>
+        </member>
+        <member name="T:Sentry.Godot.SentryAutoMetricsOptions">
+            <summary>
+            Contains configuration options for automatic performance metrics. Access this configuration through
+            <see cref="P:Sentry.Godot.SentryGodotOptions.AutoMetrics"/> or Project Settings under Sentry &gt; Auto Metrics.
+            </summary>
+            <remarks>
+            Automatic collection is disabled by default and does not affect metrics sent manually.
+            Attributes include <c>gpu.name</c>, <c>cpu.cores</c>, <c>ram.gb</c>, <c>res.x</c>, <c>res.y</c>,
+            and <c>scene</c> when available. Resolution describes the root viewport's target size in pixels,
+            before window stretching and after 3D scaling.
+            Collection pauses while the application is unfocused or paused by the operating system.
+            <c>SceneTree.Paused</c> and <c>Engine.TimeScale</c> do not affect collection.
+            To learn more, visit <see href="https://docs.sentry.io/platforms/godot/metrics/">Metrics documentation</see>.
+            </remarks>
+            <seealso cref="T:Sentry.Godot.SentryGodotOptions"/>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.EnableFrameMetrics">
+            <summary>
+            If enabled, the SDK sends <c>game.perf.frame_time</c> as a distribution in milliseconds
+            and <c>game.perf.fps</c> as a gauge.
+            </summary>
+            <remarks>
+            Frame time measures elapsed time between process callbacks, including VSync and frame limiting.
+            The collector randomly samples one frame per <see cref="P:Sentry.Godot.SentryAutoMetricsOptions.FrameMetricsIntervalSec"/> interval.
+            As more clients send frame samples, aggregate percentiles become more reliable,
+            though sampling can miss rare hitches.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.EnableRenderingMetrics">
+            <summary>
+            If enabled, the SDK sends gauges for draw calls, rendered primitives, and video memory usage
+            from Godot's <c>Performance</c> monitors.
+            </summary>
+            <remarks>
+            <c>game.perf.render.draw_calls</c> counts draw calls in the last rendered frame.
+            <c>game.perf.render.primitives</c> counts vertices or indices rendered in the last frame,
+            including depth and shadow passes.
+            <c>game.perf.render.video_mem_used</c> reports total video memory used, including texture,
+            buffer, and other allocations, in bytes.
+            <c>game.perf.render.texture_mem_used</c> reports texture memory used, in bytes.
+            <c>game.perf.render.buffer_mem_used</c> reports render buffer memory used, in bytes.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.EnableMemoryMetrics">
+            <summary>
+            If enabled, the SDK sends <c>game.perf.used_memory</c> for RAM used by the game process, in bytes,
+            <c>game.perf.object_count</c> for instantiated objects, including nodes, and
+            <c>game.perf.node_count</c> for nodes in the scene tree, including its root.
+            </summary>
+            <remarks>
+            RAM usage is collected on Windows, Linux, Android, macOS, and iOS. Skipped on other platforms.
+            </remarks>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.FrameMetricsIntervalSec">
+            <summary>
+            Controls how often frame metrics are sent, in seconds.
+            Ignored when <see cref="P:Sentry.Godot.SentryAutoMetricsOptions.EnableFrameMetrics"/> is disabled.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.RenderingMetricsIntervalSec">
+            <summary>
+            Controls how often rendering metrics are sent, in seconds.
+            Ignored when <see cref="P:Sentry.Godot.SentryAutoMetricsOptions.EnableRenderingMetrics"/> is disabled.
+            </summary>
+        </member>
+        <member name="P:Sentry.Godot.SentryAutoMetricsOptions.MemoryMetricsIntervalSec">
+            <summary>
+            Controls how often memory metrics are sent, in seconds.
+            Ignored when <see cref="P:Sentry.Godot.SentryAutoMetricsOptions.EnableMemoryMetrics"/> is disabled.
             </summary>
         </member>
         <member name="T:Sentry.Godot.GodotLoggerEventMask">
