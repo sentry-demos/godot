@@ -17,8 +17,8 @@ try {
             Remove-Item
     }
 
-    scons platform=windows arch=x86_64 target=template_release debug_symbols=yes
-    scons platform=windows arch=x86_64 target=editor debug_symbols=yes
+    scons platform=windows arch=x86_64 api_version=4.5 target=template_release debug_symbols=yes
+    scons platform=windows arch=x86_64 api_version=4.5 target=editor debug_symbols=yes
 
     Set-Location "addons/gamelogic/bin"
     foreach ($target in @("debug", "release")) {
